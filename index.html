@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chogan — Conseil Parfum</title>
+<style>
+:root{
+  --purple:#5b2a6f; --purple-dark:#3d1c4d; --gold:#c8a15b; --bg:#faf7f5;
+  --card:#ffffff; --ink:#2b2230; --muted:#7a6f80; --border:#e7dfe9;
+  --pink:#f3e6ef;
+  color-scheme: light;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
+  background:linear-gradient(180deg,var(--bg),#f1e9f3 400px, var(--bg));
+  color:var(--ink);
+}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
+header{text-align:center;margin-bottom:20px;}
+header h1{font-size:1.5rem;margin:0 0 4px;color:var(--purple-dark);letter-spacing:.3px;}
+header p{margin:0;color:var(--muted);font-size:.92rem;}
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(93,42,111,.06);
+}
+.card h2{font-size:1rem;margin:0 0 14px;color:var(--purple-dark);display:flex;align-items:center;gap:8px;}
+.step{
+  display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:50%;background:var(--purple);color:#fff;font-size:.75rem;font-weight:600;flex:none;
+}
+label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 5px;font-weight:600;}
+label:first-of-type{margin-top:0;}
+input[type=text], input[type=search], select, textarea{
+  width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;
+  font-size:0.95rem;background:#fff;color:var(--ink);font-family:inherit;
+}
+textarea{resize:vertical;min-height:60px;}
+input:focus, select:focus, textarea:focus{outline:2px solid var(--gold);border-color:var(--gold);}
+.genre-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.genre-row button{
+  flex:1;min-width:90px;padding:9px 10px;border-radius:10px;border:1px solid var(--border);
+  background:#fff;color:var(--ink);cursor:pointer;font-size:.85rem;font-weight:600;transition:.15s;
+}
+.genre-row button.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+button.primary{
+  background:var(--purple);color:#fff;border:none;padding:12px 20px;border-radius:10px;
+  font-size:.95rem;font-weight:600;cursor:pointer;flex:1;min-width:160px;transition:.15s;
+}
+button.primary:hover{background:var(--purple-dark);}
+button.secondary{
+  background:#fff;color:var(--purple);border:1px solid var(--purple);padding:12px 18px;border-radius:10px;
+  font-size:.9rem;font-weight:600;cursor:pointer;
+}
+button.secondary:hover{background:var(--pink);}
+button:disabled{opacity:.5;cursor:not-allowed;}
+#manualFamilyWrap{display:none;margin-top:10px;padding:10px;background:var(--pink);border-radius:10px;}
+#manualFamilyWrap.show{display:block;}
+.hint{font-size:.78rem;color:var(--muted);margin-top:6px;}
+.results{display:none;}
+.results.show{display:block;}
+.result-card{
+  border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;
+  position:relative; overflow:hidden;
+}
+.result-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gold);}
+.result-rank{
+  width:26px;height:26px;border-radius:50%;background:var(--purple-dark);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex:none;
+}
+.result-main{flex:1;}
+.result-main .name{font-weight:700;font-size:1rem;color:var(--purple-dark);}
+.result-main .meta{font-size:.82rem;color:var(--muted);margin-top:2px;}
+.badge{
+  display:inline-block;background:var(--pink);color:var(--purple-dark);font-size:.72rem;
+  padding:2px 8px;border-radius:20px;margin-right:6px;font-weight:600;
+}
+.price{font-weight:700;color:var(--purple-dark);font-size:1.05rem;white-space:nowrap;}
+#detectedFamily{
+  margin-top:10px;font-size:.88rem;background:var(--pink);color:var(--purple-dark);
+  padding:8px 12px;border-radius:8px;display:none;
+}
+#detectedFamily.show{display:block;}
+#saveStatus{margin-top:10px;font-size:.85rem;font-weight:600;display:none;}
+#saveStatus.ok{color:#1a7a3c;display:block;}
+#saveStatus.err{color:#a3272c;display:block;}
+#summaryBox{
+  display:none;margin-top:12px;padding:12px;border-radius:10px;background:#f6f2f8;
+  font-size:.88rem;white-space:pre-wrap;border:1px dashed var(--border);
+}
+#summaryBox.show{display:block;}
+footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
+.datalist-note{font-size:.75rem;color:var(--muted);}
+.order-line{
+  display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;margin-bottom:8px;background:#fff;
+}
+.order-line .name{flex:1;font-weight:600;font-size:.9rem;}
+.order-line .meta{font-size:.78rem;color:var(--muted);}
+.order-line input[type=number]{width:60px;padding:6px;border:1px solid var(--border);border-radius:8px;text-align:center;}
+.order-line .lineprice{font-weight:700;color:var(--purple-dark);width:70px;text-align:right;}
+.order-line .removeBtn{background:none;border:none;color:#a3272c;font-size:1.1rem;cursor:pointer;padding:2px 6px;}
+.order-total{
+  text-align:right;font-size:1.15rem;font-weight:700;color:var(--purple-dark);
+  margin:12px 0;padding-top:10px;border-top:1px dashed var(--border);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Conseil Parfum Chogan</h1>
+    <p>Trouve la référence Chogan la plus proche du parfum habituel de ta cliente ou ton client.</p>
+  </header>
+
+  <div class="card">
+    <h2><span class="step">1</span> Informations</h2>
+    <label for="clientName">Prénom du client (optionnel)</label>
+    <input type="text" id="clientName" placeholder="Ex : Camille">
+
+    <label for="perfumeInput">Parfum habituel du client</label>
+    <input type="text" id="perfumeInput" list="perfumeList" placeholder="Tape un nom de parfum (ex : Sauvage, La Vie Est Belle...)" autocomplete="off">
+    <datalist id="perfumeList"></datalist>
+    <div class="hint">Si le parfum n'est pas trouvé automatiquement, choisis sa famille manuellement ci-dessous.</div>
+
+    <div id="manualFamilyWrap">
+      <label for="manualFamily" style="margin-top:0;">Famille olfactive (sélection manuelle)</label>
+      <select id="manualFamily"></select>
+    </div>
+
+    <div id="detectedFamily"></div>
+
+    <label>Pour qui ?</label>
+    <div class="genre-row" id="genreRow">
+      <button type="button" data-genre="F">Femme</button>
+      <button type="button" data-genre="H">Homme</button>
+      <button type="button" data-genre="U">Mixte</button>
+      <button type="button" data-genre="ALL" class="active">Peu importe</button>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="matchBtn">Proposer 3 références</button>
+    </div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <h2><span class="step">2</span> Propositions</h2>
+    <div id="resultsList"></div>
+
+    <label for="notes">Notes (optionnel)</label>
+    <textarea id="notes" placeholder="Contexte, retour client, préférence de contenance..."></textarea>
+
+    <div class="actions">
+      <button class="primary" id="saveBtn">Enregistrer dans le suivi</button>
+      <button class="secondary" id="copyBtn">Copier le résumé</button>
+    </div>
+    <div id="saveStatus"></div>
+    <div id="summaryBox"></div>
+  </div>
+
+  <div class="card order" id="orderCard" style="display:none;">
+    <h2><span class="step">3</span> Commande</h2>
+    <div class="hint" style="margin-bottom:10px;">Rappel statut VDI mandataire : tu ne peux ni encaisser toi-même, ni facturer. Cette étape prépare la commande pour que le client règle via ton <strong>Referral Link</strong>, ou pour que tu crées une <strong>Smart Order</strong> — le paiement se fait toujours côté Chogan.</div>
+
+    <div id="orderItemsList"></div>
+
+    <label for="addRefInput" style="margin-top:14px;">Ajouter une autre référence</label>
+    <input type="text" id="addRefInput" list="refList" placeholder="Tape une référence ou un nom (ex : 094M, Revenant Intense...)" autocomplete="off">
+    <datalist id="refList"></datalist>
+    <div class="actions" style="margin-top:8px;">
+      <button class="secondary" id="addRefBtn" type="button">Ajouter à la commande</button>
+    </div>
+
+    <div id="orderTotal" class="order-total"></div>
+
+    <label for="clientPhone">Téléphone / email du client</label>
+    <input type="text" id="clientPhone" placeholder="Pour la Smart Order ou le Referral Link">
+
+    <label for="clientAddress">Adresse de livraison (si envoi direct au client)</label>
+    <input type="text" id="clientAddress" placeholder="Optionnel">
+
+    <label>Mode de règlement</label>
+    <div class="genre-row" id="paymentRow">
+      <button type="button" data-pay="RL" class="active">Referral Link</button>
+      <button type="button" data-pay="SO">Smart Order</button>
+    </div>
+
+    <label>Frais de port</label>
+    <div class="genre-row" id="portRow">
+      <button type="button" data-port="client" class="active">À la charge du client</button>
+      <button type="button" data-port="moi">Offerts par moi</button>
+    </div>
+
+    <label for="orderNotes">Notes commande (optionnel)</label>
+    <textarea id="orderNotes" placeholder="Contenance souhaitée, date de livraison, précisions..."></textarea>
+
+    <div class="actions">
+      <button class="primary" id="saveOrderBtn">Enregistrer la commande</button>
+      <button class="secondary" id="copyOrderBtn">Copier le récap commande</button>
+    </div>
+    <div id="orderSaveStatus"></div>
+    <div id="orderSummaryBox"></div>
+  </div>
+
+  <footer>Outil interne Nelion / Chogan — données catalogue &amp; familles olfactives issues des documents officiels Chogan.</footer>
+</div>
+
+<script>
+const DATA = {"catalog": [{"ref": "001M", "nom": "PRESTIGE FOR HIM", "inspiration": "ONE MILLION", "marque": "PACO RABANNE", "famille": "Oriental épicé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "002M", "nom": "DEEP BLUE FOR HIM", "inspiration": "ACQUA DI GIO", "marque": "ARMANI", "famille": "Aromatique frais", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "003M", "nom": "FIREBORN", "inspiration": "FAHRENHEIT DIOR", "marque": "", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "004M", "nom": "PURE EGO FOR HIM", "inspiration": "THE ONE", "marque": "D&G", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "006W", "nom": "ADDICTION", "inspiration": "OPIUM", "marque": "", "famille": "Oriental épicé", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "007W", "nom": "PURE GOLD", "inspiration": "J'ADORE", "marque": "", "famille": "Floral fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "010W", "nom": "STRANGER", "inspiration": "ALIEN", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "011W", "nom": "AQUA SOUL FOR HER", "inspiration": "LIGHT BLUE", "marque": "", "famille": "Floral frais", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "012M", "nom": "REVENANT", "inspiration": "EAU SAUVAGE DIOR", "marque": "", "famille": "Aromatique frais", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "014W", "nom": "STATEMENT", "inspiration": "MANIFESTO", "marque": "", "famille": "Floral oriental", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "015M", "nom": "URBE", "inspiration": "ROMA", "marque": "LAURA BIAGIOTTI", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "016M", "nom": "SAILOR", "inspiration": "LE MALE", "marque": "JPG", "famille": "Fougère orientale", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "018M", "nom": "REVELATION", "inspiration": "DECLARATION", "marque": "CARTIER", "famille": "Boisé épicé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "019W", "nom": "PRESTIGE FOR HER", "inspiration": "LADY MILLION", "marque": "", "famille": "Floral fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "020M", "nom": "OBSCURO", "inspiration": "LA NUIT DE L’HOMME", "marque": "YSL", "famille": "Oriental épicé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "021M", "nom": "AQUA SOUL FOR HIM", "inspiration": "LIGHT BLUE", "marque": "D&G", "famille": "Floral aquatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "022M", "nom": "ELEMENTAL", "inspiration": "TERRE D’HERMES", "marque": "HERMES", "famille": "Boisé minéral", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "023W", "nom": "FATALE", "inspiration": "HYPNOTIC POISON", "marque": "", "famille": "Oriental vanillé", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "024W", "nom": "THE ESSENCE", "inspiration": "CHANEL N°5", "marque": "", "famille": "Floral poudré", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "025W", "nom": "HER SECRET", "inspiration": "FOR HER", "marque": "", "famille": "Floral musqué", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "026W", "nom": "WILD POPPY", "inspiration": "FLOWER", "marque": "", "famille": "Floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "027W", "nom": "L’AMOUR RARE", "inspiration": "TRÉSOR", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "028W", "nom": "ETHEREA", "inspiration": "ANGEL", "marque": "", "famille": "Oriental gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "029W", "nom": "REVE PARISIEN", "inspiration": "L’EAU D’ISSEY", "marque": "", "famille": "Floral aquatique", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "030M", "nom": "MAVERICK", "inspiration": "BLACK XS", "marque": "PACO RABANNE", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "032M", "nom": "EXPLOSIVE", "inspiration": "SPICE BOMB", "marque": "VIKTOR & ROLF", "famille": "Oriental épicé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "033M", "nom": "NIGHTFALL", "inspiration": "BLACK CODE", "marque": "ARMANI", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "037M", "nom": "GENTLEMAN", "inspiration": "MAN", "marque": "BVLGARI", "famille": "Boisé épicé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "038M", "nom": "ABYSS", "inspiration": "BLEU", "marque": "CHANEL", "famille": "Aromatique boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "039W", "nom": "DARLING", "inspiration": "MISS DIOR CHERIE", "marque": "", "famille": "Chypré fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "040W", "nom": "MAGNETIC", "inspiration": "HYPNOSE", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "042W", "nom": "BONHEUR SUPREME", "inspiration": "LA VIE EST BELLE", "marque": "", "famille": "Floral gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "044U", "nom": "FROZEN CREST", "inspiration": "SILVER MOUNTAIN", "marque": "CREED", "famille": "Hespéridé musqué", "genre": "U", "gamme": "Luxe", "prix": 48}, {"ref": "045", "nom": "GARCON", "inspiration": "", "marque": "", "famille": "Enfant", "genre": "ENFANT", "gamme": "Classique", "prix": 35}, {"ref": "047W", "nom": "NIGHT GEM", "inspiration": "CRYSTAL NOIR", "marque": "", "famille": "Oriental boisé", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "048M", "nom": "SUBLIME FOR HIM", "inspiration": "ALLURE HOMME", "marque": "CHANEL", "famille": "Boisé aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "049W", "nom": "PEARL BLOOM", "inspiration": "DOLCE", "marque": "", "famille": "Floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "051W", "nom": "MISS BIJOU", "inspiration": "COCO MADEMOISELLE", "marque": "", "famille": "Chypré floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "052M", "nom": "ARABIAN MIRAGE", "inspiration": "PASHA 150", "marque": "CARTIER", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "053W", "nom": "VANITÉ", "inspiration": "NARCISO", "marque": "", "famille": "Floral musqué", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "054U", "nom": "NIGHT FLOWER", "inspiration": "BLACK ORCHID", "marque": "TOM FORD", "famille": "Oriental floral", "genre": "U", "gamme": "Classique", "prix": 35}, {"ref": "055W", "nom": "BLACK ADDICTION", "inspiration": "BLACK OPIUM", "marque": "", "famille": "Oriental gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "056W", "nom": "LIGHT & DARK", "inspiration": "ANGE OU DEMON", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "057W", "nom": "PURE PURPLE", "inspiration": "OMNIA AMETHYSTE", "marque": "", "famille": "Floral fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "058B", "nom": "BABY GIRL FILLE", "inspiration": "", "marque": "", "famille": "Enfant", "genre": "ENFANT", "gamme": "Classique", "prix": 35}, {"ref": "059", "nom": "BEBE", "inspiration": "", "marque": "", "famille": "Enfant", "genre": "ENFANT", "gamme": "Classique", "prix": 35}, {"ref": "060M", "nom": "", "inspiration": "", "marque": "", "famille": "Hespéridé boisé", "genre": "H", "gamme": "Luxe", "prix": 48}, {"ref": "061M", "nom": "TRIUMPH", "inspiration": "INVICTUS", "marque": "PACO RABANNE", "famille": "Aquatique aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "062M", "nom": "EXTREME", "inspiration": "INTENSO", "marque": "D&G", "famille": "Boisé oriental", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "064W", "nom": "TALISMAN", "inspiration": "OMNIA INDIAN GARNET", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "066M", "nom": "", "inspiration": "", "marque": "", "famille": "Oriental cuiré", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "067W", "nom": "VICTORIA", "inspiration": "OLYMPEA", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "068M", "nom": "GLORY FOR HIM", "inspiration": "AVENTUS", "marque": "CREED", "famille": "Chypré fruité", "genre": "H", "gamme": "Luxe", "prix": 57}, {"ref": "069M", "nom": "SEASIDE", "inspiration": "ACQUA DI SALE", "marque": "PROFUMIUM ROMA", "famille": "Aquatique salin", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "070W", "nom": "PURE EGO FOR HER", "inspiration": "THE ONE", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "071W", "nom": "SUBLIME FOR HER", "inspiration": "ALLURE", "marque": "", "famille": "Floral boisé", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "072U", "nom": "EARTH MEMORY", "inspiration": "PATCHOULI", "marque": "REMINISCENCE", "famille": "Boisé terreux", "genre": "U", "gamme": "Classique", "prix": 35}, {"ref": "073U", "nom": "THE SUMMIT", "inspiration": "HIMALAYA", "marque": "CREED", "famille": "Boisé frais", "genre": "U", "gamme": "Luxe", "prix": 48}, {"ref": "074M", "nom": "ESSENCE NOIRE", "inspiration": "BLACK AFGANO", "marque": "NASOMATTO", "famille": "Ambré boisé intense", "genre": "H", "gamme": "Luxury", "prix": 52}, {"ref": "075M", "nom": "XCELLENCE", "inspiration": "X FOR MEN", "marque": "CLIVE CHRISTIAN", "famille": "Aromatique boisé", "genre": "H", "gamme": "Luxury", "prix": 52}, {"ref": "076W", "nom": "DEEP BLUE FOR HER", "inspiration": "ACQUA DI GIOIA", "marque": "", "famille": "Floral aquatique", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "078M", "nom": "", "inspiration": "", "marque": "", "famille": "Oriental poudré", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "079M", "nom": "SO TRUE", "inspiration": "MYSLF", "marque": "YSL", "famille": "Boisé moderne", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "080W", "nom": "ABSOLUTELY", "inspiration": "SI", "marque": "", "famille": "Chypré floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "081W", "nom": "ALLURE ETERNELLE", "inspiration": "CLASSIQUE ESSENCE", "marque": "JPG", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "082W", "nom": "JEUNESSE", "inspiration": "SIGNORINA", "marque": "", "famille": "Floral fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "084M", "nom": "INDIGO", "inspiration": "DYLAN BLUE", "marque": "VERSACE", "famille": "Aromatique frais", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "085W", "nom": "SERENDIPITY", "inspiration": "CHANCE", "marque": "", "famille": "Chypré floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "086M", "nom": "TITAN", "inspiration": "LEGEND", "marque": "MONTBLANC", "famille": "Boisé aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "087M", "nom": "WILDMAN", "inspiration": "WANTED", "marque": "AZZARO", "famille": "Fougère aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "088M", "nom": "MIDNIGHT MAN", "inspiration": "MAN IN BLACK", "marque": "BVLGARI", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "089W", "nom": "VILLE LUMIERE", "inspiration": "MON PARIS", "marque": "YSL", "famille": "Chypré fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "090W", "nom": "FEMME FATALE", "inspiration": "POISON GIRL", "marque": "DIOR", "famille": "Floral gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "091M", "nom": "BOND", "inspiration": "CHROME", "marque": "AZZARO", "famille": "Hespéridé aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "093W", "nom": "GLORY FOR HER", "inspiration": "AVENTUS FOR HER", "marque": "CREED", "famille": "Chypré fruité", "genre": "F", "gamme": "Luxe", "prix": 57}, {"ref": "094M", "nom": "REVENANT INTENSE", "inspiration": "SAUVAGE", "marque": "DIOR", "famille": "Aromatique boisé", "genre": "H", "gamme": "Luxe", "prix": 48}, {"ref": "096W", "nom": "THE MUSE", "inspiration": "GABRIELLE", "marque": "", "famille": "Floral solaire", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "097W", "nom": "VITA", "inspiration": "AMO", "marque": "", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "098W", "nom": "EUPHORIA", "inspiration": "JOY", "marque": "", "famille": "Floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "099U", "nom": "ORANGE SUN", "inspiration": "MANDARINO DI AMALFI", "marque": "TOM FORD", "famille": "Hespéridé aromatique", "genre": "U", "gamme": "Luxe", "prix": 45}, {"ref": "100U", "nom": "MYSTIC WOODS", "inspiration": "WHITE AOUD", "marque": "MONTALE", "famille": "Ambré boisé", "genre": "U", "gamme": "Classique", "prix": 35}, {"ref": "101U", "nom": "SOFT CARESS", "inspiration": "VELVET AMBER SKIN", "marque": "D&G", "famille": "Ambré doux", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "102U", "nom": "SOFT RAYS", "inspiration": "VELVET AMBER SUN", "marque": "D&G", "famille": "Ambré solaire", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "105U", "nom": "EXPRESSO", "inspiration": "INTENSE CAFE", "marque": "MONTALE", "famille": "Oriental gourmand", "genre": "U", "gamme": "Classique", "prix": 35}, {"ref": "106U", "nom": "REBEL ICON", "inspiration": "FUCKING FABULOUS", "marque": "TOM FORD", "famille": "Cuir ambré", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "108M", "nom": "", "inspiration": "", "marque": "", "famille": "Aromatique vert", "genre": "H", "gamme": "Luxe", "prix": 48}, {"ref": "109W", "nom": "PURE GOLD INTENSE", "inspiration": "J'ADORE L'OR", "marque": "DIOR", "famille": "Floral oriental lumineux", "genre": "F", "gamme": "Luxury", "prix": 52}, {"ref": "110U", "nom": "MYSTIC SPELL", "inspiration": "KIRKE", "marque": "TIZIANA TERENZI", "famille": "Fruité exotique", "genre": "U", "gamme": "Luxe", "prix": 48}, {"ref": "111U", "nom": "RUBY LOVE", "inspiration": "LOST CHERRY", "marque": "TOM FORD", "famille": "Fruité gourmand", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "112U", "nom": "RIVIERA", "inspiration": "NEROLI PORTOFINO", "marque": "TOM FORD", "famille": "Hespéridé aromatique", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "113M", "nom": "YOUR JOURNEY", "inspiration": "SUR LA ROUTE", "marque": "LOUIS VUITTON", "famille": "Boisé cuiré", "genre": "H", "gamme": "Luxe", "prix": 57}, {"ref": "114U", "nom": "DESERT WHISPER", "inspiration": "OMBRE NOMADE", "marque": "LOUIS VUITTON", "famille": "Ambré boisé", "genre": "U", "gamme": "Luxe", "prix": 48}, {"ref": "115W", "nom": "ICON", "inspiration": "IDOLE", "marque": "", "famille": "Floral chypré", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "116W", "nom": "DECLARE", "inspiration": "YES I AM", "marque": "", "famille": "Oriental gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "117U", "nom": "VELVET SMOKE", "inspiration": "TOBACCO VANILLE", "marque": "TOM FORD", "famille": "Oriental vanillé", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "118U", "nom": "SCARLET FIRE", "inspiration": "BACCARAT ROUGE 540", "marque": "MAISON F.KURKDJIAN", "famille": "Ambré boisé", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "119W", "nom": "DARK AFFAIR", "inspiration": "SCANDAL", "marque": "", "famille": "Chypré gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "120W", "nom": "HAUTE COUTURE", "inspiration": "LA PETITE ROBE NOIRE", "marque": "GUERLAIN", "famille": "Oriental gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "121W", "nom": "SECRET DESIRE", "inspiration": "L'INTERDIT", "marque": "GIVENCHY", "famille": "Oriental floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "122W", "nom": "VOLARE", "inspiration": "LIBRE", "marque": "YSL", "famille": "Floral aromatique", "genre": "F", "gamme": "Luxe", "prix": 48}, {"ref": "123W", "nom": "SWEET REBL", "inspiration": "GOOD GIRL GONE BAD", "marque": "KILIAN", "famille": "Oriental gourmand", "genre": "F", "gamme": "Luxury", "prix": 52}, {"ref": "124U", "nom": "EVERLASTING", "inspiration": "ZETA", "marque": "MORPH", "famille": "Boisé minéral", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "125U", "nom": "MEDITERRANEO", "inspiration": "SOLE DI POSITANO ACQUA", "marque": "TOM FORD", "famille": "Hespéridé aquatique", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "126U", "nom": "LUMIERE DOREE", "inspiration": "SOLEIL BLANC", "marque": "TOM FORD", "famille": "Floral solaire", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "127U", "nom": "AGAR FOREST", "inspiration": "OUD WOOD", "marque": "TOM FORD", "famille": "Boisé fumé", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "128U", "nom": "SUGAR POISON", "inspiration": "VANILLE FATALE", "marque": "TOM FORD", "famille": "Vanillé gourmand", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "129U", "nom": "CHLOROPHYLL", "inspiration": "ERBA PURA", "marque": "XERJOFF", "famille": "Fruité ambré", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "130U", "nom": "OCEANIC PULSE", "inspiration": "MEGAMARE", "marque": "ORTO PARISI", "famille": "Boisé épicé", "genre": "U", "gamme": "Luxury", "prix": 65}, {"ref": "131W", "nom": "CHICA MALA", "inspiration": "GOOD GIRL", "marque": "C. HERRERA", "famille": "Oriental gourmand", "genre": "F", "gamme": "Luxe", "prix": 48}, {"ref": "132W", "nom": "MY RULES", "inspiration": "MY WAY", "marque": "ARMANI", "famille": "Floral lumineux", "genre": "F", "gamme": "Luxe", "prix": 45}, {"ref": "133W", "nom": "ENIGMA", "inspiration": "PARADOXE", "marque": "PRADA", "famille": "Floral ambré", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "134U", "nom": "ORANGE NECTAR", "inspiration": "BITTER PEACH", "marque": "TOM FORD", "famille": "Fruité gourmand", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "135U", "nom": "MYSTIC FOREST", "inspiration": "BOIS D’ARGENT", "marque": "DIOR", "famille": "Boisé poudré", "genre": "U", "gamme": "Luxe", "prix": 57}, {"ref": "136M", "nom": "MODERN MAN", "inspiration": "DIOR HOMME INTENSE", "marque": "DIOR", "famille": "Boisé poudré", "genre": "H", "gamme": "Luxe", "prix": 45}, {"ref": "137U", "nom": "SICILIAN GARDEN", "inspiration": "XJ 1861 NAXOS", "marque": "XERJOFF", "famille": "Oriental épicé", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "138U", "nom": "WOODLAND", "inspiration": "WOOD WHISPER", "marque": "OJAR", "famille": "Boisé musqué", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "139U", "nom": "SAHARA BLUSH", "inspiration": "LES SABLES ROSES", "marque": "LOUIS VUITTON", "famille": "Floral ambré", "genre": "U", "gamme": "Luxury", "prix": 65}, {"ref": "140M", "nom": "CUPID", "inspiration": "EROS", "marque": "VERSACE", "famille": "Oriental boisé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "141U", "nom": "SANDS OF TIME", "inspiration": "TURATH", "marque": "THE SPIRIT OF DUBAI", "famille": "Ambré résineux", "genre": "U", "gamme": "Luxury", "prix": 65}, {"ref": "142U", "nom": "DARK ECLIPSE", "inspiration": "OMBRE LEATHER", "marque": "TOM FORD", "famille": "Cuir boisé", "genre": "U", "gamme": "Luxe", "prix": 57}, {"ref": "143U", "nom": "SWEET DUST", "inspiration": "VANILLA POWDER", "marque": "MATIERE PREMIERE", "famille": "Vanillé poudré", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "144U", "nom": "CREAMY DREAM", "inspiration": "BIANCO LATTE", "marque": "GIARDINI DI TOSCANA", "famille": "Lacté gourmand", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "145W", "nom": "FOREVER YOURS", "inspiration": "DÉVOTION", "marque": "", "famille": "Oriental gourmand", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "146U", "nom": "SCARLET FLAME", "inspiration": "ROUGE", "marque": "PIERRE BALMAIN", "famille": "Boisé musqué", "genre": "U", "gamme": "Luxury", "prix": 52}, {"ref": "147M", "nom": "DARK NECTAR", "inspiration": "BOTTLED ABSOLU", "marque": "HUGO BOSS", "famille": "Oriental gourmand", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "148W", "nom": "DIVINE AURA", "inspiration": "GODDESS", "marque": "", "famille": "Floral ambré", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "150M", "nom": "UNBENDING MAN", "inspiration": "HUGO", "marque": "HUGO BOSS", "famille": "Aromatique vert", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "151W", "nom": "TO THE EDGE FOR HER", "inspiration": "GUILTY", "marque": "", "famille": "Ambré floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "152M", "nom": "TO THE EDGE FOR HIM", "inspiration": "GUILTY", "marque": "GUCCI", "famille": "Boisé aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "153W", "nom": "ROSE DUST", "inspiration": "CHLOE", "marque": "", "famille": "Floral boisé musqué", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "154W", "nom": "LIAISON ROSE", "inspiration": "LOVE CHLOE", "marque": "", "famille": "Floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "155U", "nom": "TRUE SELF", "inspiration": "CK ONE", "marque": "CALVIN KLEIN", "famille": "Hespéridée aromatique", "genre": "U", "gamme": "Classique", "prix": 35}, {"ref": "156W", "nom": "UNBENDING WOMAN", "inspiration": "HUGO", "marque": "", "famille": "Aromatique vert", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "157M", "nom": "AFTERTOUCH", "inspiration": "THE SCENT", "marque": "HUGO BOSS", "famille": "Aromatique épicé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "158W", "nom": "WILD BLOOM", "inspiration": "FLORA", "marque": "", "famille": "Floral fruité", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "159W", "nom": "BRITISH CHARM", "inspiration": "BURBERRY WOMEN", "marque": "", "famille": "Floral", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "160M", "nom": "BRITISH CHARM", "inspiration": "BURBERRY FOR MEN", "marque": "BURBERRY", "famille": "Boisé aromatique", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "161W", "nom": "ETERNAL LOVE", "inspiration": "BORN IN ROMA INTENSE", "marque": "VALENTINO", "famille": "Ambré vanillé", "genre": "F", "gamme": "Classique", "prix": 35}, {"ref": "162M", "nom": "ETERNAL LOVE", "inspiration": "BORN IN ROMA INTENSE", "marque": "VALENTINO", "famille": "Ambré vanillé", "genre": "H", "gamme": "Classique", "prix": 35}, {"ref": "163W", "nom": "BLOOMING SKIN", "inspiration": "MIUTINE", "marque": "MIU MIU", "famille": "Floral", "genre": "F", "gamme": "Luxe", "prix": 45}, {"ref": "164M", "nom": "UNFOLD", "inspiration": "PARADIGME", "marque": "PRADA", "famille": "Boisé aromatique", "genre": "H", "gamme": "Luxe", "prix": 45}, {"ref": "ASTRAL24", "nom": "ASTRAL24", "inspiration": "", "marque": "", "famille": "Fruité frais", "genre": "U", "gamme": "Création", "prix": 60}, {"ref": "EVENT23M", "nom": "EVENT23M", "inspiration": "", "marque": "", "famille": "Oriental boisé", "genre": "H", "gamme": "Création", "prix": 60}, {"ref": "EVENT23W", "nom": "EVENT23W", "inspiration": "", "marque": "", "famille": "Floral oriental", "genre": "F", "gamme": "Création", "prix": 60}, {"ref": "IMPERATRIX", "nom": "IMPERATRIX", "inspiration": "", "marque": "", "famille": "Fruité", "genre": "U", "gamme": "Création", "prix": 60}, {"ref": "MULTIVERSE", "nom": "MULTIVERSE", "inspiration": "", "marque": "", "famille": "Epicé boisé", "genre": "U", "gamme": "Création", "prix": 60}, {"ref": "NADIR", "nom": "NADIR", "inspiration": "", "marque": "", "famille": "Chypré oriental", "genre": "U", "gamme": "Création", "prix": 60}], "supplementary": [{"nom": "Coco (original)", "marque": "Chanel", "famille": "Oriental épicé", "genre": "F"}, {"nom": "Cristalle", "marque": "Chanel", "famille": "Chypré fruité", "genre": "F"}, {"nom": "Chance Eau Tendre", "marque": "Chanel", "famille": "Floral fruité", "genre": "F"}, {"nom": "Dior Homme", "marque": "Dior", "famille": "Floral boisé poudré", "genre": "H"}, {"nom": "Miss Dior", "marque": "Dior", "famille": "Chypré floral", "genre": "F"}, {"nom": "Shalimar", "marque": "Guerlain", "famille": "Oriental vanillé", "genre": "F"}, {"nom": "Mon Guerlain", "marque": "Guerlain", "famille": "Oriental floral gourmand", "genre": "F"}, {"nom": "Flowerbomb", "marque": "Viktor & Rolf", "famille": "Floral oriental gourmand", "genre": "F"}, {"nom": "Daisy", "marque": "Marc Jacobs", "famille": "Floral fruité frais", "genre": "F"}, {"nom": "Armani Code", "marque": "Giorgio Armani", "famille": "Oriental épicé boisé", "genre": "H"}, {"nom": "Un Jardin sur le Nil", "marque": "Hermès", "famille": "Hespéridé vert", "genre": "U"}, {"nom": "Candy", "marque": "Prada", "famille": "Oriental gourmand ambré", "genre": "F"}, {"nom": "Bloom", "marque": "Gucci", "famille": "Floral blanc", "genre": "F"}, {"nom": "Bright Crystal", "marque": "Versace", "famille": "Floral fruité aquatique", "genre": "F"}, {"nom": "Kenzo World", "marque": "Kenzo", "famille": "Floral fruité", "genre": "F"}, {"nom": "Pour Homme", "marque": "Issey Miyake", "famille": "Aromatique aquatique", "genre": "H"}, {"nom": "Azzaro Pour Homme", "marque": "Azzaro", "famille": "Fougère aromatique", "genre": "H"}, {"nom": "Explorer", "marque": "Montblanc", "famille": "Boisé aromatique chypré", "genre": "H"}, {"nom": "Pour Homme (D&G)", "marque": "Dolce & Gabbana", "famille": "Aromatique hespéridé", "genre": "H"}, {"nom": "Her", "marque": "Burberry", "famille": "Fruité gourmand chypré", "genre": "F"}, {"nom": "Eternity", "marque": "Calvin Klein", "famille": "Floral fougère aromatique", "genre": "U"}, {"nom": "Obsession", "marque": "Calvin Klein", "famille": "Oriental épicé vanillé", "genre": "U"}, {"nom": "Bottled", "marque": "Hugo Boss", "famille": "Boisé fruité épicé", "genre": "H"}, {"nom": "L'Air du Temps", "marque": "Nina Ricci", "famille": "Floral aldéhydé", "genre": "F"}, {"nom": "Nina", "marque": "Nina Ricci", "famille": "Fruité floral gourmand", "genre": "F"}, {"nom": "See By Chloé", "marque": "Chloé", "famille": "Floral fruité", "genre": "F"}, {"nom": "Le Parfum", "marque": "Elie Saab", "famille": "Floral solaire blanc", "genre": "F"}, {"nom": "Grand Soir", "marque": "Maison Francis Kurkdjian", "famille": "Ambré vanillé", "genre": "U"}, {"nom": "Santal 33", "marque": "Le Labo", "famille": "Boisé santal", "genre": "U"}, {"nom": "Wood Sage & Sea Salt", "marque": "Jo Malone", "famille": "Aromatique aquatique", "genre": "U"}, {"nom": "Gypsy Water", "marque": "Byredo", "famille": "Boisé hespéridé", "genre": "U"}, {"nom": "Delina", "marque": "Parfums de Marly", "famille": "Floral fruité", "genre": "F"}, {"nom": "Layton", "marque": "Parfums de Marly", "famille": "Aromatique fougère", "genre": "H"}, {"nom": "Green Irish Tweed", "marque": "Creed", "famille": "Hespéridé aromatique", "genre": "H"}, {"nom": "Black Opium (Nuit Blanche)", "marque": "YSL", "famille": "Oriental gourmand", "genre": "F"}, {"nom": "Libre Intense", "marque": "YSL", "famille": "Floral aromatique", "genre": "F"}, {"nom": "Y", "marque": "YSL", "famille": "Aromatique boisé fougère", "genre": "H"}, {"nom": "Aventus Cologne", "marque": "Creed", "famille": "Chypré fruité frais", "genre": "H"}, {"nom": "Idole L'Intense", "marque": "Lancôme", "famille": "Floral chypré", "genre": "F"}, {"nom": "Sauvage Elixir", "marque": "Dior", "famille": "Aromatique épicé", "genre": "H"}, {"nom": "Bleu de Chanel Parfum", "marque": "Chanel", "famille": "Boisé aromatique", "genre": "H"}, {"nom": "212 VIP", "marque": "Carolina Herrera", "famille": "Fruité gourmand", "genre": "U"}, {"nom": "Good Girl Supreme", "marque": "Carolina Herrera", "famille": "Oriental gourmand", "genre": "F"}, {"nom": "212 Men", "marque": "Carolina Herrera", "famille": "Aromatique frais", "genre": "H"}, {"nom": "Le Beau", "marque": "Jean Paul Gaultier", "famille": "Boisé ambré", "genre": "H"}, {"nom": "Scandal Pour Homme", "marque": "Jean Paul Gaultier", "famille": "Boisé gourmand", "genre": "H"}, {"nom": "Man Extreme", "marque": "Bvlgari", "famille": "Boisé aromatique", "genre": "H"}, {"nom": "Omnia Crystalline", "marque": "Bvlgari", "famille": "Floral aquatique", "genre": "F"}, {"nom": "1 Million Lucky", "marque": "Paco Rabanne", "famille": "Fruité gourmand", "genre": "H"}, {"nom": "Olympéa Intense", "marque": "Paco Rabanne", "famille": "Oriental floral", "genre": "F"}, {"nom": "Phantom", "marque": "Paco Rabanne", "famille": "Aromatique fougère", "genre": "H"}, {"nom": "Light Blue Eau Intense", "marque": "Dolce & Gabbana", "famille": "Hespéridé floral", "genre": "F"}, {"nom": "J'adore Infinissime", "marque": "Dior", "famille": "Floral fruité", "genre": "F"}, {"nom": "Poison", "marque": "Dior", "famille": "Oriental épicé", "genre": "F"}, {"nom": "Fahrenheit Absolu", "marque": "Dior", "famille": "Boisé cuiré", "genre": "H"}, {"nom": "Wanted by Night", "marque": "Azzaro", "famille": "Oriental épicé", "genre": "H"}]};
+
+// ---------- Config ----------
+// Colle ici l'URL de ton Web App Google Apps Script (voir instructions fournies).
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwqKp6hkXLgU12_1TVOjCMgfPMILHIawF0w9UOSVokohbr1GNOV89phBo3GLfUtLv_l0A/exec";
+
+// ---------- Helpers ----------
+function normalize(s){
+  return (s||"").toString().toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[^a-z0-9 ]/g," ")
+    .replace(/\s+/g," ").trim();
+}
+
+const FAMILY_KEYWORDS = ["oriental","ambre","floral","boise","chypre","hesperide","fougere","aromatique","cuir","fruite","musque","vanille","epice","gourmand","aquatique","solaire","poudre","frais","vert"];
+
+function familyTokens(fam){
+  return normalize(fam).split(" ").filter(Boolean);
+}
+
+// Build search index: chogan catalog (by inspiration + brand + own name) + supplementary list
+const searchIndex = [];
+DATA.catalog.forEach(p=>{
+  if(p.inspiration){
+    searchIndex.push({label:(p.inspiration + (p.marque?(" "+p.marque):"")).trim(), famille:p.famille, genre:p.genre, source:"chogan", ref:p.ref});
+  }
+});
+DATA.supplementary.forEach(s=>{
+  searchIndex.push({label:(s.nom + " " + s.marque).trim(), famille:s.famille, genre:s.genre, source:"supp"});
+});
+
+// Populate datalist
+const datalist = document.getElementById('perfumeList');
+const seenLabels = new Set();
+searchIndex.forEach(item=>{
+  if(!seenLabels.has(item.label)){
+    seenLabels.add(item.label);
+    const opt = document.createElement('option');
+    opt.value = item.label;
+    datalist.appendChild(opt);
+  }
+});
+
+// Populate manual family dropdown with all distinct families found in catalog, sorted
+const allFamilies = Array.from(new Set(DATA.catalog.map(p=>p.famille).filter(f=>f && f!=='Enfant'))).sort();
+const manualFamilySel = document.getElementById('manualFamily');
+manualFamilySel.innerHTML = '<option value="">— choisir —</option>' + allFamilies.map(f=>`<option value="${f}">${f}</option>`).join('');
+
+// ---------- Genre selector ----------
+let selectedGenre = "ALL";
+document.getElementById('genreRow').addEventListener('click', e=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#genreRow button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedGenre = btn.dataset.genre;
+});
+
+// ---------- Matching on input ----------
+const perfumeInput = document.getElementById('perfumeInput');
+const manualWrap = document.getElementById('manualFamilyWrap');
+const detectedBox = document.getElementById('detectedFamily');
+let autoDetectedFamily = null;
+let lastMatch = null;
+
+function wordBoundaryIncludes(haystack, needle){
+  if(needle.length < 3) return false;
+  const re = new RegExp('(^|\\s)' + needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|\\s)');
+  return re.test(haystack);
+}
+
+function findMatch(text){
+  const n = normalize(text);
+  if(!n || n.length < 2) return null;
+  // exact label match first
+  let best = searchIndex.find(it => normalize(it.label) === n);
+  if(best) return best;
+  // whole-word containment (avoids "si" matching inside "siecle")
+  let candidates = searchIndex.filter(it => {
+    const lab = normalize(it.label);
+    return wordBoundaryIncludes(lab, n) || wordBoundaryIncludes(n, lab);
+  });
+  if(candidates.length) {
+    candidates.sort((a,b)=> normalize(a.label).length - normalize(b.label).length);
+    return candidates[0];
+  }
+  // token overlap match (require meaningful tokens, at least one match of length>=4)
+  const STOPWORDS = new Set(["parfum","parfums","eau","cologne","toilette","pour","homme","femme","fille","garcon","inconnu","connais","sais","porte","habituel","habituelle","preferer","aime"]);
+  const tokens = n.split(" ").filter(t=>t.length>=4 && !STOPWORDS.has(t));
+  if(!tokens.length) return null;
+  let scored = searchIndex.map(it=>{
+    const lt = normalize(it.label);
+    const ltTokens = lt.split(" ");
+    let score = 0;
+    tokens.forEach(t=>{ if(ltTokens.includes(t)) score++; });
+    return {it, score};
+  }).filter(x=>x.score>0);
+  if(scored.length){
+    scored.sort((a,b)=>b.score-a.score);
+    return scored[0].it;
+  }
+  return null;
+}
+
+perfumeInput.addEventListener('input', ()=>{
+  const match = findMatch(perfumeInput.value);
+  lastMatch = match;
+  if(match){
+    autoDetectedFamily = match.famille;
+    detectedBox.textContent = "Détecté : " + match.label + " → famille \"" + match.famille + "\"";
+    detectedBox.classList.add('show');
+    manualWrap.classList.remove('show');
+  } else if(perfumeInput.value.trim().length > 1){
+    autoDetectedFamily = null;
+    detectedBox.textContent = "Parfum non reconnu automatiquement — choisis sa famille ci-dessous.";
+    detectedBox.classList.add('show');
+    manualWrap.classList.add('show');
+  } else {
+    autoDetectedFamily = null;
+    detectedBox.classList.remove('show');
+    manualWrap.classList.remove('show');
+  }
+});
+
+// ---------- Scoring & top 3 ----------
+function scoreProduct(p, targetFamily, genre, matchedRef){
+  if(p.famille === 'Enfant') return -999;
+  const tFam = normalize(targetFamily);
+  const pFam = normalize(p.famille);
+  let score = 0;
+  if(matchedRef && p.ref === matchedRef) score += 10;
+  if(pFam === tFam) score += 6;
+  const tTokens = familyTokens(targetFamily);
+  const pTokens = familyTokens(p.famille);
+  tTokens.forEach(t=>{
+    if(FAMILY_KEYWORDS.includes(t) && pTokens.includes(t)) score += 3;
+    else if(pTokens.includes(t)) score += 1.5;
+  });
+  if(genre !== 'ALL'){
+    if(p.genre === genre) score += 2;
+    else if(p.genre === 'U') score += 0.5;
+    else score -= 1.5;
+  }
+  return score;
+}
+
+let lastResults = [];
+
+document.getElementById('matchBtn').addEventListener('click', ()=>{
+  const manualFam = manualWrap.classList.contains('show') ? manualFamilySel.value : "";
+  const targetFamily = autoDetectedFamily || manualFam;
+  if(!targetFamily){
+    alert("Indique un parfum reconnu ou choisis une famille manuellement avant de générer une proposition.");
+    return;
+  }
+  const matchedRef = (autoDetectedFamily && lastMatch && lastMatch.source==='chogan') ? lastMatch.ref : null;
+  const scored = DATA.catalog
+    .map(p=>({p, s: scoreProduct(p, targetFamily, selectedGenre, matchedRef)}))
+    .filter(x=>x.s > -999)
+    .sort((a,b)=> b.s - a.s || a.p.prix - b.p.prix);
+
+  const top = [];
+  const usedRefs = new Set();
+  for(const {p} of scored){
+    if(top.length>=3) break;
+    if(usedRefs.has(p.ref)) continue;
+    usedRefs.add(p.ref);
+    top.push(p);
+  }
+  lastResults = top;
+  renderResults(top, targetFamily);
+});
+
+function renderResults(top, targetFamily){
+  const list = document.getElementById('resultsList');
+  if(!top.length){
+    list.innerHTML = "<p>Aucune référence trouvée pour cette famille. Essaie une autre saisie.</p>";
+  } else {
+    list.innerHTML = top.map((p,i)=>`
+      <div class="result-card">
+        <div class="result-rank">${i+1}</div>
+        <div class="result-main">
+          <div class="name">${p.nom || p.ref} <span class="badge">${p.ref}</span></div>
+          <div class="meta">
+            ${p.inspiration ? ("Dans l'esprit de <strong>"+p.inspiration+(p.marque? " ("+p.marque+")":"")+"</strong> — ") : ""}
+            ${p.famille} · Gamme ${p.gamme} · ${p.genre==='F'?'Femme':p.genre==='H'?'Homme':'Mixte'}
+          </div>
+        </div>
+        <div class="price">${p.prix}€</div>
+        <button type="button" class="secondary addCartBtn" data-ref="${p.ref}" style="padding:8px 12px;font-size:.8rem;">+ Panier</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('resultsCard').classList.add('show');
+  document.getElementById('orderCard').style.display = 'block';
+  document.getElementById('resultsCard').scrollIntoView({behavior:'smooth', block:'start'});
+  list.querySelectorAll('.addCartBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = DATA.catalog.find(x=>x.ref===btn.dataset.ref);
+      if(p) addToCart(p);
+    });
+  });
+}
+
+// ---------- Order cart ----------
+let orderCart = []; // {ref, nom, gamme, prix, qte}
+
+function addToCart(p){
+  const existing = orderCart.find(l=>l.ref===p.ref);
+  if(existing){ existing.qte += 1; }
+  else { orderCart.push({ref:p.ref, nom:p.nom||p.ref, gamme:p.gamme, prix:p.prix, qte:1}); }
+  renderCart();
+}
+
+function renderCart(){
+  const el = document.getElementById('orderItemsList');
+  if(!orderCart.length){
+    el.innerHTML = '<p class="hint">Aucun article — clique "+ Panier" sur une proposition ci-dessus, ou ajoute une référence manuellement.</p>';
+  } else {
+    el.innerHTML = orderCart.map((l,i)=>`
+      <div class="order-line">
+        <div class="name">${l.nom} <span class="badge">${l.ref}</span><div class="meta">${l.gamme}</div></div>
+        <input type="number" min="1" value="${l.qte}" data-idx="${i}" class="qtyInput">
+        <div class="lineprice">${(l.prix*l.qte).toFixed(2)}€</div>
+        <button type="button" class="removeBtn" data-idx="${i}">✕</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('.qtyInput').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const idx = parseInt(inp.dataset.idx,10);
+        const v = Math.max(1, parseInt(inp.value,10)||1);
+        orderCart[idx].qte = v;
+        renderCart();
+      });
+    });
+    el.querySelectorAll('.removeBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        orderCart.splice(parseInt(btn.dataset.idx,10),1);
+        renderCart();
+      });
+    });
+  }
+  const total = orderCart.reduce((s,l)=> s + l.prix*l.qte, 0);
+  document.getElementById('orderTotal').textContent = "Total : " + total.toFixed(2) + "€";
+}
+renderCart();
+
+// datalist for adding any catalog reference manually
+const refList = document.getElementById('refList');
+DATA.catalog.filter(p=>p.famille!=='Enfant').forEach(p=>{
+  const opt = document.createElement('option');
+  opt.value = p.ref + " — " + (p.nom||p.ref) + (p.inspiration?(" (esprit "+p.inspiration+")"):"") + " — " + p.prix + "€";
+  refList.appendChild(opt);
+});
+
+document.getElementById('addRefBtn').addEventListener('click', ()=>{
+  const val = document.getElementById('addRefInput').value.trim();
+  if(!val) return;
+  const refGuess = val.split(' ')[0].replace('—','').trim().toUpperCase();
+  let p = DATA.catalog.find(x=>x.ref.toUpperCase()===refGuess);
+  if(!p){
+    const nVal = normalize(val);
+    p = DATA.catalog.find(x=> normalize(x.nom||'').includes(nVal) || normalize(x.inspiration||'').includes(nVal) || nVal.includes(normalize(x.ref)));
+  }
+  if(!p){
+    alert("Référence non reconnue. Choisis dans la liste suggérée ou vérifie l'orthographe.");
+    return;
+  }
+  addToCart(p);
+  document.getElementById('addRefInput').value = '';
+});
+
+// payment / port toggles
+let paymentMode = 'RL';
+document.getElementById('paymentRow').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#paymentRow button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); paymentMode = btn.dataset.pay;
+});
+let portMode = 'client';
+document.getElementById('portRow').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#portRow button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); portMode = btn.dataset.port;
+});
+
+function buildOrderSummary(){
+  const client = document.getElementById('clientName').value.trim();
+  const phone = document.getElementById('clientPhone').value.trim();
+  const addr = document.getElementById('clientAddress').value.trim();
+  let lines = [];
+  lines.push("Commande Chogan" + (client ? (" — " + client) : ""));
+  if(phone) lines.push("Contact : " + phone);
+  if(addr) lines.push("Adresse : " + addr);
+  orderCart.forEach(l=> lines.push("- " + l.nom + " (" + l.ref + ") x" + l.qte + " — " + (l.prix*l.qte).toFixed(2) + "€"));
+  const total = orderCart.reduce((s,l)=> s + l.prix*l.qte, 0);
+  lines.push("Total : " + total.toFixed(2) + "€");
+  lines.push("Règlement : " + (paymentMode==='RL' ? "Referral Link" : "Smart Order"));
+  lines.push("Frais de port : " + (portMode==='client' ? "à la charge du client" : "offerts"));
+  return lines.join("\n");
+}
+
+document.getElementById('copyOrderBtn').addEventListener('click', ()=>{
+  const text = buildOrderSummary();
+  const box = document.getElementById('orderSummaryBox');
+  navigator.clipboard.writeText(text).catch(()=>{});
+  box.textContent = text;
+  box.classList.add('show');
+});
+
+document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
+  if(!orderCart.length){
+    alert("Ajoute au moins une référence à la commande avant d'enregistrer.");
+    return;
+  }
+  const statusEl = document.getElementById('orderSaveStatus');
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    statusEl.className = 'err';
+    statusEl.textContent = "Configuration requise : colle l'URL de ton Web App Apps Script dans le fichier (WEBAPP_URL).";
+    return;
+  }
+  const total = orderCart.reduce((s,l)=> s + l.prix*l.qte, 0);
+  const payload = {
+    type: 'commande',
+    client: document.getElementById('clientName').value.trim(),
+    telephone: document.getElementById('clientPhone').value.trim(),
+    adresse: document.getElementById('clientAddress').value.trim(),
+    articles: orderCart.map(l=> l.nom+" ("+l.ref+") x"+l.qte+" — "+(l.prix*l.qte).toFixed(2)+"€").join(" | "),
+    total: total.toFixed(2),
+    reglement: paymentMode==='RL' ? 'Referral Link' : 'Smart Order',
+    port: portMode==='client' ? 'A la charge du client' : 'Offerts',
+    notes: document.getElementById('orderNotes').value.trim()
+  };
+  statusEl.className = '';
+  statusEl.textContent = 'Enregistrement...';
+  fetch(WEBAPP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  }).then(()=>{
+    statusEl.className = 'ok';
+    statusEl.textContent = '✓ Commande enregistrée dans le Google Sheet (onglet Commandes).';
+  }).catch(err=>{
+    statusEl.className = 'err';
+    statusEl.textContent = "Erreur d'enregistrement : " + err;
+  });
+});
+
+// ---------- Summary / copy ----------
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const text = buildSummary();
+  navigator.clipboard.writeText(text).then(()=>{
+    const box = document.getElementById('summaryBox');
+    box.textContent = text;
+    box.classList.add('show');
+  }).catch(()=>{
+    const box = document.getElementById('summaryBox');
+    box.textContent = text;
+    box.classList.add('show');
+  });
+});
+
+function buildSummary(){
+  const client = document.getElementById('clientName').value.trim();
+  let lines = [];
+  lines.push("Proposition parfum Chogan" + (client ? (" — " + client) : ""));
+  lastResults.forEach((p,i)=>{
+    lines.push((i+1)+". "+p.nom+" ("+p.ref+") - "+p.prix+"€ - "+p.famille+(p.inspiration?(" - inspiré de "+p.inspiration):""));
+  });
+  return lines.join("\n");
+}
+
+// ---------- Save to Google Sheet ----------
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  if(!lastResults.length){
+    alert("Génère d'abord une proposition avant d'enregistrer.");
+    return;
+  }
+  const statusEl = document.getElementById('saveStatus');
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    statusEl.className = 'err';
+    statusEl.textContent = "Configuration requise : colle l'URL de ton Web App Apps Script dans le fichier (WEBAPP_URL) pour activer la sauvegarde.";
+    return;
+  }
+  const payload = {
+    type: 'recommandation',
+    client: document.getElementById('clientName').value.trim(),
+    parfum: perfumeInput.value.trim(),
+    famille: autoDetectedFamily || manualFamilySel.value,
+    ref1: lastResults[0] ? lastResults[0].ref : '', nom1: lastResults[0] ? lastResults[0].nom : '', gamme1: lastResults[0] ? lastResults[0].gamme : '', prix1: lastResults[0] ? lastResults[0].prix : '',
+    ref2: lastResults[1] ? lastResults[1].ref : '', nom2: lastResults[1] ? lastResults[1].nom : '', gamme2: lastResults[1] ? lastResults[1].gamme : '', prix2: lastResults[1] ? lastResults[1].prix : '',
+    ref3: lastResults[2] ? lastResults[2].ref : '', nom3: lastResults[2] ? lastResults[2].nom : '', gamme3: lastResults[2] ? lastResults[2].gamme : '', prix3: lastResults[2] ? lastResults[2].prix : '',
+    notes: document.getElementById('notes').value.trim()
+  };
+  statusEl.className = '';
+  statusEl.textContent = 'Enregistrement...';
+  fetch(WEBAPP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  }).then(()=>{
+    statusEl.className = 'ok';
+    statusEl.textContent = '✓ Enregistré dans le Google Sheet.';
+  }).catch(err=>{
+    statusEl.className = 'err';
+    statusEl.textContent = 'Erreur d\'enregistrement : ' + err;
+  });
+});
+</script>
+</body>
+</html>
