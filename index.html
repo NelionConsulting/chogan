@@ -162,8 +162,12 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
   </div>
 
   <div class="card order" id="orderCard" style="display:none;">
-    <h2><span class="step">3</span> Commande</h2>
+    <h2><span class="step">3</span> Commande <span id="cartCountBadge" class="badge" style="display:none;"></span></h2>
     <div class="hint" style="margin-bottom:10px;">Rappel statut VDI mandataire : tu ne peux ni encaisser toi-même, ni facturer. Cette étape prépare la commande pour que le client règle via ton <strong>Referral Link</strong>, ou pour que tu crées une <strong>Smart Order</strong> — le paiement se fait toujours côté Chogan.</div>
+
+    <div class="actions" style="margin-bottom:14px;">
+      <button class="secondary" id="newSearchBtn" type="button">🔍 Rechercher un autre parfum à ajouter à cette commande</button>
+    </div>
 
     <div id="orderItemsList"></div>
 
@@ -453,8 +457,37 @@ function renderCart(){
   }
   const total = orderCart.reduce((s,l)=> s + l.prix*l.qte, 0);
   document.getElementById('orderTotal').textContent = "Total : " + total.toFixed(2) + "€";
+  const badge = document.getElementById('cartCountBadge');
+  const nbArticles = orderCart.reduce((s,l)=> s + l.qte, 0);
+  if(nbArticles > 0){
+    badge.textContent = nbArticles + " article" + (nbArticles>1?"s":"");
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 renderCart();
+
+// ---------- Nouvelle recherche (garde le panier / la commande en cours) ----------
+document.getElementById('newSearchBtn').addEventListener('click', ()=>{
+  perfumeInput.value = '';
+  autoDetectedFamily = null;
+  lastMatch = null;
+  detectedBox.classList.remove('show');
+  manualWrap.classList.remove('show');
+  manualFamilySel.value = '';
+  document.querySelectorAll('#genreRow button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#genreRow button[data-genre="ALL"]').classList.add('active');
+  selectedGenre = 'ALL';
+  document.getElementById('resultsCard').classList.remove('show');
+  document.getElementById('notes').value = '';
+  document.getElementById('saveStatus').className = '';
+  document.getElementById('saveStatus').textContent = '';
+  document.getElementById('summaryBox').classList.remove('show');
+  lastResults = [];
+  window.scrollTo({top:0, behavior:'smooth'});
+  perfumeInput.focus();
+});
 
 // datalist for adding any catalog reference manually
 const refList = document.getElementById('refList');
@@ -551,7 +584,7 @@ document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
     body: JSON.stringify(payload)
   }).then(()=>{
     statusEl.className = 'ok';
-    statusEl.textContent = '✓ Commande enregistrée dans le Google Sheet (onglet Commandes).';
+    statusEl.textContent = '✓ Commande enregistrée (' + orderCart.length + ' référence(s)). Tu peux continuer à chercher d\'autres parfums et ajouter des articles au panier — le prochain clic sur "Enregistrer" créera une nouvelle ligne avec le panier complet à jour.';
   }).catch(err=>{
     statusEl.className = 'err';
     statusEl.textContent = "Erreur d'enregistrement : " + err;
