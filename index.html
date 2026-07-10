@@ -6,15 +6,15 @@
 <title>Chogan — Conseil Parfum</title>
 <style>
 :root{
-  --purple:#5b2a6f; --purple-dark:#3d1c4d; --gold:#c8a15b; --bg:#faf7f5;
-  --card:#ffffff; --ink:#2b2230; --muted:#7a6f80; --border:#e7dfe9;
-  --pink:#f3e6ef;
+  --purple:#a97c5a; --purple-dark:#5f4632; --gold:#c3a26c; --bg:#f7f2ec;
+  --card:#ffffff; --ink:#4a3b2f; --muted:#9c8b78; --border:#e8dfd1;
+  --pink:#efe6d8;
   color-scheme: light;
 }
 *{box-sizing:border-box;}
 body{
   margin:0; font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;
-  background:linear-gradient(180deg,var(--bg),#f1e9f3 400px, var(--bg));
+  background:linear-gradient(180deg,var(--bg),#ece0cd 400px, var(--bg));
   color:var(--ink);
 }
 .wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
@@ -87,11 +87,11 @@ button:disabled{opacity:.5;cursor:not-allowed;}
 #saveStatus{margin-top:10px;font-size:.85rem;font-weight:600;display:none;}
 #saveStatus.ok{color:#1a7a3c;display:block;}
 #saveStatus.err{color:#a3272c;display:block;}
-#summaryBox{
-  display:none;margin-top:12px;padding:12px;border-radius:10px;background:#f6f2f8;
+#summaryBox, #orderSummaryBox{
+  display:none;margin-top:12px;padding:12px;border-radius:10px;background:#f3ede1;
   font-size:.88rem;white-space:pre-wrap;border:1px dashed var(--border);
 }
-#summaryBox.show{display:block;}
+#summaryBox.show, #orderSummaryBox.show{display:block;}
 footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
 .datalist-note{font-size:.75rem;color:var(--muted);}
 .order-line{
