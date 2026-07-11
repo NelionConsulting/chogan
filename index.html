@@ -56,8 +56,6 @@ button.secondary{
 }
 button.secondary:hover{background:var(--pink);}
 button:disabled{opacity:.5;cursor:not-allowed;}
-#manualFamilyWrap{display:none;margin-top:10px;padding:10px;background:var(--pink);border-radius:10px;}
-#manualFamilyWrap.show{display:block;}
 .hint{font-size:.78rem;color:var(--muted);margin-top:6px;}
 .results{display:none;}
 .results.show{display:block;}
@@ -135,15 +133,10 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
     </div>
 
     <div id="perfumeModeBlock">
-      <label for="perfumeInput">Parfum habituel du client</label>
-      <input type="text" id="perfumeInput" list="perfumeList" placeholder="Tape un nom de parfum (ex : Sauvage, La Vie Est Belle...)" autocomplete="off">
+      <label for="perfumeInput">Parfum habituel du client, ou référence Chogan</label>
+      <input type="text" id="perfumeInput" list="perfumeList" placeholder="Ex : Sauvage, La Vie Est Belle, ou 094M..." autocomplete="off">
       <datalist id="perfumeList"></datalist>
-      <div class="hint">Si le parfum n'est pas trouvé automatiquement, choisis sa famille manuellement ci-dessous.</div>
-
-      <div id="manualFamilyWrap">
-        <label for="manualFamily" style="margin-top:0;">Famille olfactive (sélection manuelle)</label>
-        <select id="manualFamily"></select>
-      </div>
+      <div class="hint">Si rien n'est reconnu, essaie plutôt la "Recherche par notes olfactives" ci-dessus.</div>
 
       <div id="detectedFamily"></div>
     </div>
@@ -254,12 +247,15 @@ function familyTokens(fam){
   return normalize(fam).split(" ").filter(Boolean);
 }
 
-// Build search index: chogan catalog (by inspiration + brand + own name) + supplementary list
+// Build search index: chogan catalog (by inspiration + brand + own name + ref) + supplementary list
 const searchIndex = [];
 DATA.catalog.forEach(p=>{
+  if(p.famille === 'Enfant') return;
   if(p.inspiration){
     searchIndex.push({label:(p.inspiration + (p.marque?(" "+p.marque):"")).trim(), famille:p.famille, genre:p.genre, source:"chogan", ref:p.ref});
   }
+  // Recherche directe par numéro de référence Chogan (ex : "094M")
+  searchIndex.push({label:(p.ref + (p.nom?(" "+p.nom):"")).trim(), famille:p.famille, genre:p.genre, source:"chogan", ref:p.ref});
 });
 DATA.supplementary.forEach(s=>{
   searchIndex.push({label:(s.nom + " " + s.marque).trim(), famille:s.famille, genre:s.genre, source:"supp"});
@@ -276,11 +272,6 @@ searchIndex.forEach(item=>{
     datalist.appendChild(opt);
   }
 });
-
-// Populate manual family dropdown with all distinct families found in catalog, sorted
-const allFamilies = Array.from(new Set(DATA.catalog.map(p=>p.famille).filter(f=>f && f!=='Enfant'))).sort();
-const manualFamilySel = document.getElementById('manualFamily');
-manualFamilySel.innerHTML = '<option value="">— choisir —</option>' + allFamilies.map(f=>`<option value="${f}">${f}</option>`).join('');
 
 // ---------- Recherche par notes olfactives ----------
 const NOTE_LABELS = {
@@ -336,7 +327,6 @@ document.getElementById('genreRow').addEventListener('click', e=>{
 
 // ---------- Matching on input ----------
 const perfumeInput = document.getElementById('perfumeInput');
-const manualWrap = document.getElementById('manualFamilyWrap');
 const detectedBox = document.getElementById('detectedFamily');
 let autoDetectedFamily = null;
 let lastMatch = null;
@@ -385,18 +375,16 @@ perfumeInput.addEventListener('input', ()=>{
   lastMatch = match;
   if(match){
     autoDetectedFamily = match.famille;
-    detectedBox.textContent = "Détecté : " + match.label + " → famille \"" + match.famille + "\"";
+    const label = match.source === 'chogan' && match.ref ? (match.ref + (match.label.replace(match.ref,'').trim() ? " — " + match.label.replace(match.ref,'').trim() : "")) : match.label;
+    detectedBox.textContent = "Détecté : " + label + " → famille \"" + match.famille + "\"";
     detectedBox.classList.add('show');
-    manualWrap.classList.remove('show');
   } else if(perfumeInput.value.trim().length > 1){
     autoDetectedFamily = null;
-    detectedBox.textContent = "Parfum non reconnu automatiquement — choisis sa famille ci-dessous.";
+    detectedBox.textContent = "Non reconnu — vérifie l'orthographe/la référence, ou utilise \"Recherche par notes olfactives\" ci-dessus.";
     detectedBox.classList.add('show');
-    manualWrap.classList.add('show');
   } else {
     autoDetectedFamily = null;
     detectedBox.classList.remove('show');
-    manualWrap.classList.remove('show');
   }
 });
 
@@ -464,10 +452,9 @@ document.getElementById('matchBtn').addEventListener('click', ()=>{
       return;
     }
   } else {
-    const manualFam = manualWrap.classList.contains('show') ? manualFamilySel.value : "";
-    const targetFamily = autoDetectedFamily || manualFam;
+    const targetFamily = autoDetectedFamily;
     if(!targetFamily){
-      alert("Indique un parfum reconnu ou choisis une famille manuellement avant de générer une proposition.");
+      alert("Indique un parfum ou une référence Chogan reconnue avant de générer une proposition (ou utilise la recherche par notes olfactives).");
       return;
     }
     const matchedRef = (autoDetectedFamily && lastMatch && lastMatch.source==='chogan') ? lastMatch.ref : null;
@@ -581,8 +568,6 @@ document.getElementById('newSearchBtn').addEventListener('click', ()=>{
   autoDetectedFamily = null;
   lastMatch = null;
   detectedBox.classList.remove('show');
-  manualWrap.classList.remove('show');
-  manualFamilySel.value = '';
   document.querySelectorAll('#genreRow button').forEach(b=>b.classList.remove('active'));
   document.querySelector('#genreRow button[data-genre="ALL"]').classList.add('active');
   selectedGenre = 'ALL';
