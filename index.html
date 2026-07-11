@@ -107,6 +107,13 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
   text-align:right;font-size:1.15rem;font-weight:700;color:var(--purple-dark);
   margin:12px 0;padding-top:10px;border-top:1px dashed var(--border);
 }
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip-row button{
+  padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;
+  color:var(--ink);cursor:pointer;font-size:.85rem;font-weight:600;transition:.15s;
+}
+.chip-row button.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+.chip-row button.active::before{content:"✓ ";}
 </style>
 </head>
 <body>
@@ -121,17 +128,31 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
     <label for="clientName">Prénom du client (optionnel)</label>
     <input type="text" id="clientName" placeholder="Ex : Camille">
 
-    <label for="perfumeInput">Parfum habituel du client</label>
-    <input type="text" id="perfumeInput" list="perfumeList" placeholder="Tape un nom de parfum (ex : Sauvage, La Vie Est Belle...)" autocomplete="off">
-    <datalist id="perfumeList"></datalist>
-    <div class="hint">Si le parfum n'est pas trouvé automatiquement, choisis sa famille manuellement ci-dessous.</div>
-
-    <div id="manualFamilyWrap">
-      <label for="manualFamily" style="margin-top:0;">Famille olfactive (sélection manuelle)</label>
-      <select id="manualFamily"></select>
+    <label>Comment chercher ?</label>
+    <div class="genre-row" id="modeRow">
+      <button type="button" data-mode="perfume" class="active">Je connais son parfum</button>
+      <button type="button" data-mode="notes">Recherche par notes olfactives</button>
     </div>
 
-    <div id="detectedFamily"></div>
+    <div id="perfumeModeBlock">
+      <label for="perfumeInput">Parfum habituel du client</label>
+      <input type="text" id="perfumeInput" list="perfumeList" placeholder="Tape un nom de parfum (ex : Sauvage, La Vie Est Belle...)" autocomplete="off">
+      <datalist id="perfumeList"></datalist>
+      <div class="hint">Si le parfum n'est pas trouvé automatiquement, choisis sa famille manuellement ci-dessous.</div>
+
+      <div id="manualFamilyWrap">
+        <label for="manualFamily" style="margin-top:0;">Famille olfactive (sélection manuelle)</label>
+        <select id="manualFamily"></select>
+      </div>
+
+      <div id="detectedFamily"></div>
+    </div>
+
+    <div id="notesModeBlock" style="display:none;">
+      <label>Notes recherchées (sélection multiple)</label>
+      <div class="hint" style="margin-top:-4px;margin-bottom:10px;">Sélectionne une ou plusieurs notes — les références les mieux notées sur l'ensemble des notes choisies remontent en premier.</div>
+      <div class="chip-row" id="notesChipRow"></div>
+    </div>
 
     <label>Pour qui ?</label>
     <div class="genre-row" id="genreRow">
@@ -261,6 +282,48 @@ const allFamilies = Array.from(new Set(DATA.catalog.map(p=>p.famille).filter(f=>
 const manualFamilySel = document.getElementById('manualFamily');
 manualFamilySel.innerHTML = '<option value="">— choisir —</option>' + allFamilies.map(f=>`<option value="${f}">${f}</option>`).join('');
 
+// ---------- Recherche par notes olfactives ----------
+const NOTE_LABELS = {
+  oriental:"Oriental", ambre:"Ambré", floral:"Floral", boise:"Boisé", chypre:"Chypré",
+  hesperide:"Hespéridé", fougere:"Fougère", aromatique:"Aromatique", cuir:"Cuir",
+  fruite:"Fruité", musque:"Musqué", vanille:"Vanillé", epice:"Épicé", gourmand:"Gourmand",
+  aquatique:"Aquatique", solaire:"Solaire", poudre:"Poudré", frais:"Frais", vert:"Vert"
+};
+const notesChipRow = document.getElementById('notesChipRow');
+const availableNoteTokens = FAMILY_KEYWORDS.filter(tok =>
+  DATA.catalog.some(p => familyTokens(p.famille).includes(tok))
+);
+notesChipRow.innerHTML = availableNoteTokens.map(tok =>
+  `<button type="button" data-note="${tok}">${NOTE_LABELS[tok] || tok}</button>`
+).join('');
+const selectedNotes = new Set();
+notesChipRow.addEventListener('click', e=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const tok = btn.dataset.note;
+  if(selectedNotes.has(tok)){ selectedNotes.delete(tok); btn.classList.remove('active'); }
+  else { selectedNotes.add(tok); btn.classList.add('active'); }
+});
+
+// ---------- Mode de recherche (parfum connu vs notes olfactives) ----------
+let searchMode = 'perfume';
+const perfumeModeBlock = document.getElementById('perfumeModeBlock');
+const notesModeBlock = document.getElementById('notesModeBlock');
+document.getElementById('modeRow').addEventListener('click', e=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#modeRow button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  searchMode = btn.dataset.mode;
+  if(searchMode === 'notes'){
+    perfumeModeBlock.style.display = 'none';
+    notesModeBlock.style.display = 'block';
+  } else {
+    perfumeModeBlock.style.display = 'block';
+    notesModeBlock.style.display = 'none';
+  }
+});
+
 // ---------- Genre selector ----------
 let selectedGenre = "ALL";
 document.getElementById('genreRow').addEventListener('click', e=>{
@@ -359,20 +422,62 @@ function scoreProduct(p, targetFamily, genre, matchedRef){
   return score;
 }
 
+// Score a product against a set of selected note tokens (multi-select notes mode)
+function scoreProductByNotes(p, noteTokens, genre){
+  if(p.famille === 'Enfant') return -999;
+  const pTokens = familyTokens(p.famille);
+  let matchCount = 0;
+  noteTokens.forEach(t=>{ if(pTokens.includes(t)) matchCount++; });
+  if(matchCount === 0) return -999;
+  let score = matchCount * 4;
+  if(matchCount === noteTokens.length && noteTokens.length > 1) score += 5; // bonus: matches every note requested
+  if(genre !== 'ALL'){
+    if(p.genre === genre) score += 2;
+    else if(p.genre === 'U') score += 0.5;
+    else score -= 1.5;
+  }
+  return score;
+}
+
 let lastResults = [];
+let lastQueryLabel = '';   // texte affiché/loggé pour la recherche (nom parfum ou notes sélectionnées)
+let lastQueryFamille = ''; // famille loggée dans le Sheet
 
 document.getElementById('matchBtn').addEventListener('click', ()=>{
-  const manualFam = manualWrap.classList.contains('show') ? manualFamilySel.value : "";
-  const targetFamily = autoDetectedFamily || manualFam;
-  if(!targetFamily){
-    alert("Indique un parfum reconnu ou choisis une famille manuellement avant de générer une proposition.");
-    return;
+  let scored, queryLabel, familleLabel;
+
+  if(searchMode === 'notes'){
+    const noteTokens = Array.from(selectedNotes);
+    if(!noteTokens.length){
+      alert("Sélectionne au moins une note olfactive avant de générer une proposition.");
+      return;
+    }
+    scored = DATA.catalog
+      .map(p=>({p, s: scoreProductByNotes(p, noteTokens, selectedGenre)}))
+      .filter(x=>x.s > -999)
+      .sort((a,b)=> b.s - a.s || a.p.prix - b.p.prix);
+    const labels = noteTokens.map(t=>NOTE_LABELS[t]||t);
+    queryLabel = "Recherche par notes : " + labels.join(", ");
+    familleLabel = labels.join(" + ");
+    if(!scored.length){
+      alert("Aucune référence ne correspond à cette combinaison de notes. Essaie avec moins de notes à la fois.");
+      return;
+    }
+  } else {
+    const manualFam = manualWrap.classList.contains('show') ? manualFamilySel.value : "";
+    const targetFamily = autoDetectedFamily || manualFam;
+    if(!targetFamily){
+      alert("Indique un parfum reconnu ou choisis une famille manuellement avant de générer une proposition.");
+      return;
+    }
+    const matchedRef = (autoDetectedFamily && lastMatch && lastMatch.source==='chogan') ? lastMatch.ref : null;
+    scored = DATA.catalog
+      .map(p=>({p, s: scoreProduct(p, targetFamily, selectedGenre, matchedRef)}))
+      .filter(x=>x.s > -999)
+      .sort((a,b)=> b.s - a.s || a.p.prix - b.p.prix);
+    queryLabel = perfumeInput.value.trim();
+    familleLabel = targetFamily;
   }
-  const matchedRef = (autoDetectedFamily && lastMatch && lastMatch.source==='chogan') ? lastMatch.ref : null;
-  const scored = DATA.catalog
-    .map(p=>({p, s: scoreProduct(p, targetFamily, selectedGenre, matchedRef)}))
-    .filter(x=>x.s > -999)
-    .sort((a,b)=> b.s - a.s || a.p.prix - b.p.prix);
 
   const top = [];
   const usedRefs = new Set();
@@ -383,7 +488,9 @@ document.getElementById('matchBtn').addEventListener('click', ()=>{
     top.push(p);
   }
   lastResults = top;
-  renderResults(top, targetFamily);
+  lastQueryLabel = queryLabel;
+  lastQueryFamille = familleLabel;
+  renderResults(top, familleLabel);
 });
 
 function renderResults(top, targetFamily){
@@ -485,8 +592,12 @@ document.getElementById('newSearchBtn').addEventListener('click', ()=>{
   document.getElementById('saveStatus').textContent = '';
   document.getElementById('summaryBox').classList.remove('show');
   lastResults = [];
+  lastQueryLabel = '';
+  lastQueryFamille = '';
+  selectedNotes.clear();
+  document.querySelectorAll('#notesChipRow button').forEach(b=>b.classList.remove('active'));
   window.scrollTo({top:0, behavior:'smooth'});
-  perfumeInput.focus();
+  if(searchMode === 'perfume') perfumeInput.focus();
 });
 
 // datalist for adding any catalog reference manually
@@ -609,6 +720,7 @@ function buildSummary(){
   const client = document.getElementById('clientName').value.trim();
   let lines = [];
   lines.push("Proposition parfum Chogan" + (client ? (" — " + client) : ""));
+  if(lastQueryLabel) lines.push("Recherche : " + lastQueryLabel);
   lastResults.forEach((p,i)=>{
     lines.push((i+1)+". "+p.nom+" ("+p.ref+") - "+p.prix+"€ - "+p.famille+(p.inspiration?(" - inspiré de "+p.inspiration):""));
   });
@@ -630,8 +742,8 @@ document.getElementById('saveBtn').addEventListener('click', ()=>{
   const payload = {
     type: 'recommandation',
     client: document.getElementById('clientName').value.trim(),
-    parfum: perfumeInput.value.trim(),
-    famille: autoDetectedFamily || manualFamilySel.value,
+    parfum: lastQueryLabel,
+    famille: lastQueryFamille,
     ref1: lastResults[0] ? lastResults[0].ref : '', nom1: lastResults[0] ? lastResults[0].nom : '', gamme1: lastResults[0] ? lastResults[0].gamme : '', prix1: lastResults[0] ? lastResults[0].prix : '',
     ref2: lastResults[1] ? lastResults[1].ref : '', nom2: lastResults[1] ? lastResults[1].nom : '', gamme2: lastResults[1] ? lastResults[1].gamme : '', prix2: lastResults[1] ? lastResults[1].prix : '',
     ref3: lastResults[2] ? lastResults[2].ref : '', nom3: lastResults[2] ? lastResults[2].nom : '', gamme3: lastResults[2] ? lastResults[2].gamme : '', prix3: lastResults[2] ? lastResults[2].prix : '',
