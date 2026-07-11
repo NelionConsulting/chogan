@@ -85,6 +85,8 @@ button:disabled{opacity:.5;cursor:not-allowed;}
 #saveStatus{margin-top:10px;font-size:.85rem;font-weight:600;display:none;}
 #saveStatus.ok{color:#1a7a3c;display:block;}
 #saveStatus.err{color:#a3272c;display:block;}
+#referralCopyStatus{margin-top:10px;font-size:.85rem;font-weight:600;display:none;}
+#referralCopyStatus.ok{color:#1a7a3c;display:block;}
 #summaryBox, #orderSummaryBox{
   display:none;margin-top:12px;padding:12px;border-radius:10px;background:#f3ede1;
   font-size:.88rem;white-space:pre-wrap;border:1px dashed var(--border);
@@ -120,6 +122,21 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
     <h1>Conseil Parfum Chogan</h1>
     <p>Trouve la référence Chogan la plus proche du parfum habituel de ta cliente ou ton client.</p>
   </header>
+
+  <div class="card" id="referralCard">
+    <h2>📨 Inviter un client (mon Referral Link)</h2>
+    <div class="hint" style="margin-top:-6px;margin-bottom:10px;">Message prêt à copier-coller sur WhatsApp, Telegram ou par SMS — ou fais scanner le QR code directement.</div>
+    <textarea id="referralMessage" rows="3" readonly></textarea>
+    <div class="actions" style="margin-top:10px;">
+      <button class="primary" id="copyReferralBtn" type="button">Copier le message</button>
+      <button class="secondary" id="copyReferralLinkBtn" type="button">Copier le lien seul</button>
+    </div>
+    <div id="referralCopyStatus"></div>
+    <div style="margin-top:16px;text-align:center;">
+      <img id="referralQr" alt="QR code du Referral Link Chogan" style="width:160px;height:160px;border:1px solid var(--border);border-radius:10px;padding:8px;background:#fff;">
+      <div class="hint" style="margin-top:6px;">À faire scanner directement par le client</div>
+    </div>
+  </div>
 
   <div class="card">
     <h2><span class="step">1</span> Informations</h2>
@@ -235,6 +252,30 @@ const DATA = {"catalog": [{"ref": "001M", "nom": "PRESTIGE FOR HIM", "inspiratio
 // ---------- Config ----------
 // Colle ici l'URL de ton Web App Google Apps Script (voir instructions fournies).
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwqKp6hkXLgU12_1TVOjCMgfPMILHIawF0w9UOSVokohbr1GNOV89phBo3GLfUtLv_l0A/exec";
+
+// ---------- Referral link / QR code ----------
+const REFERRAL_LINK = "https://www.chogangroupspa.com/referral/JOA66204C/FR";
+const REFERRAL_MESSAGE = "Inscris-toi chez Chogan Group via mon referral link. Clique sur ce lien pour t'inscrire " + REFERRAL_LINK;
+document.getElementById('referralMessage').value = REFERRAL_MESSAGE;
+document.getElementById('referralQr').src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(REFERRAL_LINK);
+
+function flashReferralStatus(text){
+  const el = document.getElementById('referralCopyStatus');
+  el.textContent = text;
+  el.className = 'ok';
+  clearTimeout(flashReferralStatus._t);
+  flashReferralStatus._t = setTimeout(()=>{ el.textContent=''; el.className=''; }, 2500);
+}
+
+document.getElementById('copyReferralBtn').addEventListener('click', ()=>{
+  navigator.clipboard.writeText(REFERRAL_MESSAGE).catch(()=>{});
+  flashReferralStatus('✓ Message copié — colle-le sur WhatsApp, Telegram ou SMS.');
+});
+
+document.getElementById('copyReferralLinkBtn').addEventListener('click', ()=>{
+  navigator.clipboard.writeText(REFERRAL_LINK).catch(()=>{});
+  flashReferralStatus('✓ Lien copié.');
+});
 
 // ---------- Helpers ----------
 function normalize(s){
