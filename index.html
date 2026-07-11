@@ -194,8 +194,11 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
 
     <div id="orderTotal" class="order-total"></div>
 
-    <label for="clientPhone">Téléphone / email du client</label>
-    <input type="text" id="clientPhone" placeholder="Pour la Smart Order ou le Referral Link">
+    <label for="clientPhone">Numéro de mobile du client</label>
+    <input type="text" id="clientPhone" placeholder="Pour la Smart Order ou le Referral Link" inputmode="tel">
+
+    <label for="clientEmail">Email du client</label>
+    <input type="email" id="clientEmail" placeholder="Pour la Smart Order ou le Referral Link">
 
     <label for="clientAddress">Adresse de livraison (si envoi direct au client)</label>
     <input type="text" id="clientAddress" placeholder="Optionnel">
@@ -628,10 +631,12 @@ document.getElementById('portRow').addEventListener('click', e=>{
 function buildOrderSummary(){
   const client = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
+  const email = document.getElementById('clientEmail').value.trim();
   const addr = document.getElementById('clientAddress').value.trim();
   let lines = [];
   lines.push("Commande Chogan" + (client ? (" — " + client) : ""));
-  if(phone) lines.push("Contact : " + phone);
+  if(phone) lines.push("Mobile : " + phone);
+  if(email) lines.push("Email : " + email);
   if(addr) lines.push("Adresse : " + addr);
   orderCart.forEach(l=> lines.push("- " + l.nom + " (" + l.ref + ") x" + l.qte + " — " + (l.prix*l.qte).toFixed(2) + "€"));
   const total = orderCart.reduce((s,l)=> s + l.prix*l.qte, 0);
@@ -665,6 +670,7 @@ document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
     type: 'commande',
     client: document.getElementById('clientName').value.trim(),
     telephone: document.getElementById('clientPhone').value.trim(),
+    email: document.getElementById('clientEmail').value.trim(),
     adresse: document.getElementById('clientAddress').value.trim(),
     articles: orderCart.map(l=> l.nom+" ("+l.ref+") x"+l.qte+" — "+(l.prix*l.qte).toFixed(2)+"€").join(" | "),
     total: total.toFixed(2),
