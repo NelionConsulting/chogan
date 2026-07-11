@@ -389,8 +389,16 @@ perfumeInput.addEventListener('input', ()=>{
 });
 
 // ---------- Scoring & top 3 ----------
+// Filtre genre strict : Homme -> Homme+Mixte, Femme -> Femme+Mixte, Mixte -> Mixte uniquement.
+function genreMatches(pGenre, genre){
+  if(genre === 'ALL') return true;
+  if(genre === 'U') return pGenre === 'U';
+  return pGenre === genre || pGenre === 'U';
+}
+
 function scoreProduct(p, targetFamily, genre, matchedRef){
   if(p.famille === 'Enfant') return -999;
+  if(!genreMatches(p.genre, genre)) return -999;
   const tFam = normalize(targetFamily);
   const pFam = normalize(p.famille);
   let score = 0;
@@ -402,28 +410,21 @@ function scoreProduct(p, targetFamily, genre, matchedRef){
     if(FAMILY_KEYWORDS.includes(t) && pTokens.includes(t)) score += 3;
     else if(pTokens.includes(t)) score += 1.5;
   });
-  if(genre !== 'ALL'){
-    if(p.genre === genre) score += 2;
-    else if(p.genre === 'U') score += 0.5;
-    else score -= 1.5;
-  }
+  if(genre !== 'ALL' && p.genre === genre) score += 2;
   return score;
 }
 
 // Score a product against a set of selected note tokens (multi-select notes mode)
 function scoreProductByNotes(p, noteTokens, genre){
   if(p.famille === 'Enfant') return -999;
+  if(!genreMatches(p.genre, genre)) return -999;
   const pTokens = familyTokens(p.famille);
   let matchCount = 0;
   noteTokens.forEach(t=>{ if(pTokens.includes(t)) matchCount++; });
   if(matchCount === 0) return -999;
   let score = matchCount * 4;
   if(matchCount === noteTokens.length && noteTokens.length > 1) score += 5; // bonus: matches every note requested
-  if(genre !== 'ALL'){
-    if(p.genre === genre) score += 2;
-    else if(p.genre === 'U') score += 0.5;
-    else score -= 1.5;
-  }
+  if(genre !== 'ALL' && p.genre === genre) score += 2;
   return score;
 }
 
