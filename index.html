@@ -152,10 +152,53 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
     </div>
   </div>
 
+  <div class="card" id="relance222Card">
+    <h2>📅 Relances 2-2-2 du jour <span id="relance222CountBadge" class="badge" style="display:none;"></span></h2>
+    <div class="hint" style="margin-top:-6px;margin-bottom:10px;">Méthode Chogan : relance à J+2 après réception (impressions), +2 semaines (ressenti détaillé &amp; parrainage), +2 mois (réachat). Calculée à partir de la date de réception saisie sur chaque commande (ou estimée à J+4 après la commande si absente).</div>
+
+    <label for="tpl222J2">Message J+2 — remerciement</label>
+    <textarea id="tpl222J2">Coucou {prenom} ! Je voulais vraiment te remercier pour ta commande. J'ai hâte que tu me fasses un retour sur les super produits Chogan ! Je suis sûre que tu vas les adorer.</textarea>
+
+    <label for="tpl222S2" style="margin-top:12px;">Message +2 semaines — ressenti &amp; parrainage</label>
+    <textarea id="tpl222S2">Coucou {prenom} j'espère que tu vas bien ? Je viens aux nouvelles parce que c'est super important pour moi d'avoir le ressenti de mes clientes : est-ce que tu as commencé à utiliser {parfum} ? Tous les jours ? La senteur, la tenue, la texture, qu'est-ce que tu en penses ? Et j'ai une mission pour toi : je me développe avec le bouche à oreille, peux-tu faire découvrir la gamme autour de toi ? Tu peux même leur faire sentir ton parfum !</textarea>
+
+    <label for="tpl222M2" style="margin-top:12px;">Message +2 mois — réachat</label>
+    <textarea id="tpl222M2">Coucou {prenom} ! Ça fait maintenant 2 mois que tu as ton {parfum} Chogan. Je voulais prendre de tes nouvelles et voir si tu as besoin de refaire ton stock, ou si une nouvelle référence te tente — j'ai plein de nouveautés et parfois des offres à te faire découvrir !</textarea>
+
+    <div class="actions" style="margin-top:10px;">
+      <button type="button" class="secondary" id="loadRelances222Btn">Actualiser les relances du jour</button>
+    </div>
+    <div id="relance222List" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card" id="relanceCard">
+    <h2>🔁 Relances prospects (sans commande) <span id="relanceCountBadge" class="badge" style="display:none;"></span></h2>
+    <div class="hint" style="margin-top:-6px;margin-bottom:10px;">Clients à qui une référence a été proposée mais qui n'ont pas (encore) commandé.</div>
+
+    <label for="relanceTemplate">Message type (modifiable avant chaque envoi)</label>
+    <textarea id="relanceTemplate">Coucou {prenom} 🌸 Je reviens vers toi au sujet de {parfum} que je t'avais proposé — toujours partant(e) ? Dis-moi si tu veux que je te prépare ta commande !</textarea>
+
+    <div class="actions" style="margin-top:10px;">
+      <button type="button" class="secondary" id="loadRelancesBtn">Actualiser les relances</button>
+    </div>
+    <div id="relanceList" style="margin-top:12px;"></div>
+  </div>
+
   <div class="card">
     <h2><span class="step">1</span> Informations</h2>
     <label for="clientName">Prénom du client (optionnel)</label>
     <input type="text" id="clientName" placeholder="Ex : Camille">
+
+    <label for="clientPhone">Téléphone du client (optionnel — permet d'envoyer directement par WhatsApp)</label>
+    <input type="text" id="clientPhone" placeholder="Ex : 06 12 34 56 78" inputmode="tel">
+
+    <label for="clientEmail">Email du client (optionnel)</label>
+    <input type="email" id="clientEmail" placeholder="Ex : camille@exemple.fr">
+
+    <div class="actions" style="margin-top:8px;">
+      <button type="button" class="secondary" id="lookupClientBtn">🔍 Retrouver l'historique de ce client</button>
+    </div>
+    <div id="lookupResults" class="hint" style="margin-top:4px;"></div>
 
     <label>Comment chercher ?</label>
     <div class="genre-row" id="modeRow">
@@ -170,6 +213,7 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
       <div class="hint">Si rien n'est reconnu, essaie plutôt la "Recherche par notes olfactives" ci-dessus.</div>
 
       <div id="detectedFamily"></div>
+      <div class="chip-row" id="matchSuggestions" style="margin-top:8px;display:none;"></div>
     </div>
 
     <div id="notesModeBlock" style="display:none;">
@@ -194,9 +238,27 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
   <div class="card results" id="resultsCard">
     <h2><span class="step">2</span> Propositions</h2>
     <div id="resultsList"></div>
+    <div class="actions" style="margin-top:0;">
+      <button type="button" class="secondary" id="addAllCartBtn">+ Ajouter les 3 au panier</button>
+    </div>
 
     <label for="notes">Notes (optionnel)</label>
     <textarea id="notes" placeholder="Contexte, retour client, préférence de contenance..."></textarea>
+
+    <label for="propositionTemplate">Message client (modifiable avant envoi)</label>
+    <textarea id="propositionTemplate">Coucou {prenom} 🌸 Voici ce que je te propose : {parfums}. Dis-moi si l'une de ces réfs te tente, je peux te préparer ta commande dès maintenant !</textarea>
+
+    <div class="actions" style="margin-top:10px;">
+      <button type="button" id="propWaBtn" class="share-btn share-wa">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        Envoyer par WhatsApp
+      </button>
+      <button type="button" id="propSmsBtn" class="share-btn share-sms">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M4 4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.5a.5.5 0 0 0 .8.4L12.7 19H20a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4z"/></svg>
+        Envoyer par SMS
+      </button>
+    </div>
+    <div class="hint" style="margin-top:4px;">Envoyer par WhatsApp ou SMS enregistre aussi automatiquement la recommandation dans le suivi (pour les relances).</div>
 
     <div class="actions">
       <button class="primary" id="saveBtn">Enregistrer dans le suivi</button>
@@ -225,14 +287,14 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
 
     <div id="orderTotal" class="order-total"></div>
 
-    <label for="clientPhone">Numéro de mobile du client</label>
-    <input type="text" id="clientPhone" placeholder="Pour la Smart Order ou le Referral Link" inputmode="tel">
-
-    <label for="clientEmail">Email du client</label>
-    <input type="email" id="clientEmail" placeholder="Pour la Smart Order ou le Referral Link">
+    <div class="hint" style="margin-bottom:6px;">Numéro de mobile et email : renseignés à l'étape 1 (utilisés pour la Smart Order, le Referral Link, et l'envoi WhatsApp direct).</div>
 
     <label for="clientAddress">Adresse de livraison (si envoi direct au client)</label>
     <input type="text" id="clientAddress" placeholder="Optionnel">
+
+    <label for="clientReceptionDate">Date de réception du colis par le client (si connue)</label>
+    <input type="date" id="clientReceptionDate">
+    <div class="hint" style="margin-top:-4px;">Sert de point de départ aux relances 2-2-2. Si tu ne la connais pas encore, laisse vide — elle sera estimée à J+4 après la commande (tu pourras revenir corriger la vraie date sur cette même ligne dans le Sheet).</div>
 
     <label>Mode de règlement</label>
     <div class="genre-row" id="paymentRow">
@@ -250,14 +312,14 @@ footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:24px;}
     <textarea id="orderNotes" placeholder="Contenance souhaitée, date de livraison, précisions..."></textarea>
 
     <div class="actions">
-      <button class="primary" id="saveOrderBtn">Enregistrer la commande</button>
+      <button class="primary" id="saveOrderBtn">Enregistrer &amp; envoyer au client</button>
       <button class="secondary" id="copyOrderBtn">Copier le récap commande</button>
     </div>
     <div id="orderSaveStatus"></div>
     <div id="orderSummaryBox"></div>
   </div>
 
-  <footer>Outil interne Nelion / Chogan — données catalogue &amp; familles olfactives issues des documents officiels Chogan.</footer>
+  <footer>Outil interne Nelion / Chogan — données catalogue &amp; familles olfactives issues des documents officiels Chogan.<br><a href="#" id="showBackupLink" style="color:var(--muted);text-decoration:underline;cursor:pointer;">Voir les sauvegardes locales de secours</a></footer>
 </div>
 
 <script>
@@ -279,6 +341,38 @@ function isIOSDevice(){
 const encodedReferralMsg = encodeURIComponent(REFERRAL_MESSAGE);
 document.getElementById('waShareBtn').href = "https://wa.me/?text=" + encodedReferralMsg;
 document.getElementById('smsShareBtn').href = (isIOSDevice() ? "sms:&body=" : "sms:?body=") + encodedReferralMsg;
+
+// ---------- WhatsApp direct au client + backup local ----------
+function phoneToWaNumber(phone){
+  let p = (phone||'').replace(/[^\d+]/g,'');
+  if(!p) return '';
+  if(p.startsWith('+')) p = p.slice(1);
+  else if(p.startsWith('0')) p = '33' + p.slice(1);
+  return p;
+}
+function buildWaLink(text, phone){
+  const waNum = phoneToWaNumber(phone);
+  const base = waNum ? ("https://wa.me/" + waNum) : "https://wa.me/";
+  return base + "?text=" + encodeURIComponent(text);
+}
+function backupLocally(payload){
+  try{
+    const key = 'chogan_backup_log';
+    const log = JSON.parse(localStorage.getItem(key) || '[]');
+    log.push({ts: new Date().toLocaleString('fr-FR'), payload});
+    while(log.length > 50) log.shift();
+    localStorage.setItem(key, JSON.stringify(log));
+  }catch(e){ /* stockage indisponible, on ignore silencieusement */ }
+}
+document.getElementById('showBackupLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem('chogan_backup_log') || '[]'); }catch(err){}
+  if(!log.length){ alert("Aucune sauvegarde locale de secours pour le moment."); return; }
+  const text = log.map(l => l.ts + " — " + JSON.stringify(l.payload)).join('\n\n');
+  navigator.clipboard.writeText(text).catch(()=>{});
+  alert(log.length + " sauvegarde(s) locale(s) copiée(s) dans le presse-papier — utile en cas de doute sur une écriture dans le Google Sheet.");
+});
 
 // ---------- Helpers ----------
 function normalize(s){
@@ -362,6 +456,42 @@ document.getElementById('modeRow').addEventListener('click', e=>{
   }
 });
 
+// ---------- Historique client (nécessite un endpoint doGet côté Apps Script — voir instructions séparées) ----------
+document.getElementById('lookupClientBtn').addEventListener('click', ()=>{
+  const phone = document.getElementById('clientPhone').value.trim();
+  const box = document.getElementById('lookupResults');
+  if(!phone){
+    box.textContent = "Renseigne d'abord un numéro de téléphone ci-dessus pour rechercher l'historique.";
+    return;
+  }
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    box.textContent = "Configuration requise : colle l'URL de ton Web App Apps Script (WEBAPP_URL).";
+    return;
+  }
+  box.textContent = "Recherche en cours...";
+  fetch(WEBAPP_URL + "?action=lookup&phone=" + encodeURIComponent(phone))
+    .then(r=>{
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data=>{
+      if(!data || !data.ok) throw new Error('réponse inattendue');
+      if(!data.results || !data.results.length){
+        box.textContent = "Aucun historique trouvé pour ce numéro.";
+        return;
+      }
+      box.innerHTML = "<strong>Historique (" + data.results.length + ") :</strong><br>" +
+        data.results.map(r => "• " + (r.date||'') + " — " + (
+          r.type === 'commande'
+            ? ("Commande " + (r.articles||'') + " — " + (r.total||'') + "€")
+            : ("Reco : " + [r.ref1,r.ref2,r.ref3].filter(Boolean).join(', '))
+        )).join("<br>");
+    })
+    .catch(err=>{
+      box.textContent = "Historique indisponible pour l'instant — cette fonctionnalité nécessite d'ajouter une petite fonction doGet à ton Apps Script (voir les instructions fournies à part). Détail : " + err.message;
+    });
+});
+
 // ---------- Genre selector ----------
 let selectedGenre = "ALL";
 document.getElementById('genreRow').addEventListener('click', e=>{
@@ -384,12 +514,15 @@ function wordBoundaryIncludes(haystack, needle){
   return re.test(haystack);
 }
 
-function findMatch(text){
+// Retourne jusqu'à `limit` candidats possibles (au lieu d'un seul), pour permettre
+// de choisir manuellement quand la saisie est ambiguë (nom générique, orthographe approximative...).
+function findMatchCandidates(text, limit){
+  limit = limit || 4;
   const n = normalize(text);
-  if(!n || n.length < 2) return null;
-  // exact label match first
-  let best = searchIndex.find(it => normalize(it.label) === n);
-  if(best) return best;
+  if(!n || n.length < 2) return [];
+  // exact label match first — non ambigu, on s'arrête là
+  let exact = searchIndex.filter(it => normalize(it.label) === n);
+  if(exact.length) return exact.slice(0, limit);
   // whole-word containment (avoids "si" matching inside "siecle")
   let candidates = searchIndex.filter(it => {
     const lab = normalize(it.label);
@@ -397,12 +530,14 @@ function findMatch(text){
   });
   if(candidates.length) {
     candidates.sort((a,b)=> normalize(a.label).length - normalize(b.label).length);
-    return candidates[0];
+    const seen = new Set(); const out = [];
+    for(const c of candidates){ if(!seen.has(c.label)){ seen.add(c.label); out.push(c); } if(out.length>=limit) break; }
+    return out;
   }
   // token overlap match (require meaningful tokens, at least one match of length>=4)
   const STOPWORDS = new Set(["parfum","parfums","eau","cologne","toilette","pour","homme","femme","fille","garcon","inconnu","connais","sais","porte","habituel","habituelle","preferer","aime"]);
   const tokens = n.split(" ").filter(t=>t.length>=4 && !STOPWORDS.has(t));
-  if(!tokens.length) return null;
+  if(!tokens.length) return [];
   let scored = searchIndex.map(it=>{
     const lt = normalize(it.label);
     const ltTokens = lt.split(" ");
@@ -410,29 +545,56 @@ function findMatch(text){
     tokens.forEach(t=>{ if(ltTokens.includes(t)) score++; });
     return {it, score};
   }).filter(x=>x.score>0);
-  if(scored.length){
-    scored.sort((a,b)=>b.score-a.score);
-    return scored[0].it;
-  }
-  return null;
+  scored.sort((a,b)=>b.score-a.score);
+  const seen = new Set(); const out = [];
+  for(const s of scored){ if(!seen.has(s.it.label)){ seen.add(s.it.label); out.push(s.it); } if(out.length>=limit) break; }
+  return out;
 }
 
-perfumeInput.addEventListener('input', ()=>{
-  const match = findMatch(perfumeInput.value);
+function applyMatch(match, tentative){
   lastMatch = match;
-  if(match){
-    autoDetectedFamily = match.famille;
-    const label = match.source === 'chogan' && match.ref ? (match.ref + (match.label.replace(match.ref,'').trim() ? " — " + match.label.replace(match.ref,'').trim() : "")) : match.label;
-    detectedBox.textContent = "Détecté : " + label + " → famille \"" + match.famille + "\"";
-    detectedBox.classList.add('show');
-  } else if(perfumeInput.value.trim().length > 1){
+  autoDetectedFamily = match.famille;
+  const label = match.source === 'chogan' && match.ref ? (match.ref + (match.label.replace(match.ref,'').trim() ? " — " + match.label.replace(match.ref,'').trim() : "")) : match.label;
+  detectedBox.textContent = (tentative ? "Détecté (parmi plusieurs possibles — choisis ci-dessous si ce n'est pas le bon) : " : "Détecté : ") + label + " → famille \"" + match.famille + "\"";
+  detectedBox.classList.add('show');
+}
+
+const matchSuggestions = document.getElementById('matchSuggestions');
+
+perfumeInput.addEventListener('input', ()=>{
+  const candidates = findMatchCandidates(perfumeInput.value, 4);
+  if(!candidates.length){
+    lastMatch = null;
     autoDetectedFamily = null;
-    detectedBox.textContent = "Non reconnu — vérifie l'orthographe/la référence, ou utilise \"Recherche par notes olfactives\" ci-dessus.";
-    detectedBox.classList.add('show');
-  } else {
-    autoDetectedFamily = null;
-    detectedBox.classList.remove('show');
+    if(perfumeInput.value.trim().length > 1){
+      detectedBox.textContent = "Non reconnu — vérifie l'orthographe/la référence, ou utilise \"Recherche par notes olfactives\" ci-dessus.";
+      detectedBox.classList.add('show');
+    } else {
+      detectedBox.classList.remove('show');
+    }
+    matchSuggestions.style.display = 'none';
+    matchSuggestions.innerHTML = '';
+    return;
   }
+  if(candidates.length === 1){
+    applyMatch(candidates[0]);
+    matchSuggestions.style.display = 'none';
+    matchSuggestions.innerHTML = '';
+    return;
+  }
+  // Ambigu : on affiche une valeur par défaut (la plus probable) + des alternatives cliquables
+  applyMatch(candidates[0], true);
+  matchSuggestions.innerHTML = candidates.map((c,i)=>
+    `<button type="button" data-idx="${i}">${c.source==='chogan' && c.ref ? (c.ref + ' — ') : ''}${c.label}</button>`
+  ).join('');
+  matchSuggestions.style.display = 'flex';
+  matchSuggestions.querySelectorAll('button').forEach((btn,i)=>{
+    btn.addEventListener('click', ()=>{
+      applyMatch(candidates[i]);
+      matchSuggestions.style.display = 'none';
+      matchSuggestions.innerHTML = '';
+    });
+  });
 });
 
 // ---------- Scoring & top 3 ----------
@@ -558,6 +720,11 @@ function renderResults(top, targetFamily){
     });
   });
 }
+
+document.getElementById('addAllCartBtn').addEventListener('click', ()=>{
+  if(!lastResults.length) return;
+  lastResults.forEach(p=> addToCart(p));
+});
 
 // ---------- Order cart ----------
 let orderCart = []; // {ref, nom, gamme, prix, qte}
@@ -703,27 +870,33 @@ document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
     alert("Ajoute au moins une référence à la commande avant d'enregistrer.");
     return;
   }
+  // Ouverture WhatsApp en tout premier (synchrone) pour ne pas être bloqué par le navigateur
+  const phone = document.getElementById('clientPhone').value.trim();
+  window.open(buildWaLink(buildOrderSummary(), phone), '_blank');
+
   const statusEl = document.getElementById('orderSaveStatus');
-  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
-    statusEl.className = 'err';
-    statusEl.textContent = "Configuration requise : colle l'URL de ton Web App Apps Script dans le fichier (WEBAPP_URL).";
-    return;
-  }
   const total = orderCart.reduce((s,l)=> s + l.prix*l.qte, 0);
   const payload = {
     type: 'commande',
     client: document.getElementById('clientName').value.trim(),
-    telephone: document.getElementById('clientPhone').value.trim(),
+    telephone: phone,
     email: document.getElementById('clientEmail').value.trim(),
     adresse: document.getElementById('clientAddress').value.trim(),
+    reception: document.getElementById('clientReceptionDate').value,
     articles: orderCart.map(l=> l.nom+" ("+l.ref+") x"+l.qte+" — "+(l.prix*l.qte).toFixed(2)+"€").join(" | "),
     total: total.toFixed(2),
     reglement: paymentMode==='RL' ? 'Referral Link' : 'Smart Order',
     port: portMode==='client' ? 'A la charge du client' : 'Offerts',
     notes: document.getElementById('orderNotes').value.trim()
   };
+  backupLocally(payload);
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    statusEl.className = 'err';
+    statusEl.textContent = "WhatsApp ouvert. Configuration requise : colle l'URL de ton Web App Apps Script dans le fichier (WEBAPP_URL) pour activer la sauvegarde dans le Sheet.";
+    return;
+  }
   statusEl.className = '';
-  statusEl.textContent = 'Enregistrement...';
+  statusEl.textContent = 'WhatsApp ouvert — enregistrement dans le Sheet en cours...';
   fetch(WEBAPP_URL, {
     method: 'POST',
     mode: 'no-cors',
@@ -731,10 +904,10 @@ document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
     body: JSON.stringify(payload)
   }).then(()=>{
     statusEl.className = 'ok';
-    statusEl.textContent = '✓ Commande enregistrée (' + orderCart.length + ' référence(s)). Tu peux continuer à chercher d\'autres parfums et ajouter des articles au panier — le prochain clic sur "Enregistrer" créera une nouvelle ligne avec le panier complet à jour.';
+    statusEl.textContent = '✓ Envoyé au client par WhatsApp (' + orderCart.length + ' référence(s)) et transmis au Google Sheet (copie de secours conservée sur cet appareil — le navigateur ne peut pas confirmer à 100% l\'écriture réelle, vérifie ponctuellement le Sheet). Tu peux continuer à chercher d\'autres parfums et ajouter des articles au panier — le prochain clic créera une nouvelle ligne avec le panier complet à jour.';
   }).catch(err=>{
     statusEl.className = 'err';
-    statusEl.textContent = "Erreur d'enregistrement : " + err;
+    statusEl.textContent = "WhatsApp ouvert. Erreur réseau lors de l'enregistrement dans le Sheet (donnée conservée en secours localement, voir lien en bas de page) : " + err;
   });
 });
 
@@ -764,20 +937,14 @@ function buildSummary(){
 }
 
 // ---------- Save to Google Sheet ----------
-document.getElementById('saveBtn').addEventListener('click', ()=>{
-  if(!lastResults.length){
-    alert("Génère d'abord une proposition avant d'enregistrer.");
-    return;
-  }
-  const statusEl = document.getElementById('saveStatus');
-  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
-    statusEl.className = 'err';
-    statusEl.textContent = "Configuration requise : colle l'URL de ton Web App Apps Script dans le fichier (WEBAPP_URL) pour activer la sauvegarde.";
-    return;
-  }
-  const payload = {
+function buildRecommendationPayload(){
+  const phone = document.getElementById('clientPhone').value.trim();
+  return {
     type: 'recommandation',
     client: document.getElementById('clientName').value.trim(),
+    telephone: phone,
+    email: document.getElementById('clientEmail').value.trim(),
+    genre: selectedGenre,
     parfum: lastQueryLabel,
     famille: lastQueryFamille,
     ref1: lastResults[0] ? lastResults[0].ref : '', nom1: lastResults[0] ? lastResults[0].nom : '', gamme1: lastResults[0] ? lastResults[0].gamme : '', prix1: lastResults[0] ? lastResults[0].prix : '',
@@ -785,19 +952,305 @@ document.getElementById('saveBtn').addEventListener('click', ()=>{
     ref3: lastResults[2] ? lastResults[2].ref : '', nom3: lastResults[2] ? lastResults[2].nom : '', gamme3: lastResults[2] ? lastResults[2].gamme : '', prix3: lastResults[2] ? lastResults[2].prix : '',
     notes: document.getElementById('notes').value.trim()
   };
-  statusEl.className = '';
-  statusEl.textContent = 'Enregistrement...';
+}
+
+function saveRecommendation(statusEl, prefix){
+  const payload = buildRecommendationPayload();
+  backupLocally(payload);
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    if(statusEl){
+      statusEl.className = 'err';
+      statusEl.textContent = prefix + "Configuration requise : colle l'URL de ton Web App Apps Script dans le fichier (WEBAPP_URL) pour activer la sauvegarde dans le Sheet.";
+    }
+    return;
+  }
+  if(statusEl){
+    statusEl.className = '';
+    statusEl.textContent = prefix + 'Enregistrement dans le Sheet en cours...';
+  }
   fetch(WEBAPP_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: {'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify(payload)
   }).then(()=>{
-    statusEl.className = 'ok';
-    statusEl.textContent = '✓ Enregistré dans le Google Sheet.';
+    if(statusEl){
+      statusEl.className = 'ok';
+      statusEl.textContent = prefix + '✓ Transmis au Google Sheet (copie de secours conservée sur cet appareil — le navigateur ne peut pas confirmer à 100% l\'écriture réelle, vérifie ponctuellement le Sheet).';
+    }
   }).catch(err=>{
-    statusEl.className = 'err';
-    statusEl.textContent = 'Erreur d\'enregistrement : ' + err;
+    if(statusEl){
+      statusEl.className = 'err';
+      statusEl.textContent = prefix + "Erreur réseau lors de l'enregistrement dans le Sheet (donnée conservée en secours localement, voir lien en bas de page) : " + err;
+    }
+  });
+}
+
+function fillPropositionTemplate(tpl, data){
+  return tpl
+    .replace(/\{prenom\}/g, data.prenom || '')
+    .replace(/\{parfums\}/g, data.parfums || '');
+}
+
+function buildPropositionMessage(){
+  const client = document.getElementById('clientName').value.trim();
+  const parfums = lastResults.map(p=> p.nom + ' (' + p.ref + ')').join(', ');
+  return fillPropositionTemplate(document.getElementById('propositionTemplate').value, {prenom: client, parfums: parfums});
+}
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  if(!lastResults.length){
+    alert("Génère d'abord une proposition avant d'enregistrer.");
+    return;
+  }
+  saveRecommendation(document.getElementById('saveStatus'), '');
+});
+
+document.getElementById('propWaBtn').addEventListener('click', ()=>{
+  if(!lastResults.length){
+    alert("Génère d'abord une proposition avant d'envoyer.");
+    return;
+  }
+  // Ouverture WhatsApp en tout premier (synchrone) pour ne pas être bloqué par le navigateur
+  const phone = document.getElementById('clientPhone').value.trim();
+  window.open(buildWaLink(buildPropositionMessage(), phone), '_blank');
+  saveRecommendation(document.getElementById('saveStatus'), 'WhatsApp ouvert. ');
+});
+
+document.getElementById('propSmsBtn').addEventListener('click', ()=>{
+  if(!lastResults.length){
+    alert("Génère d'abord une proposition avant d'envoyer.");
+    return;
+  }
+  const phone = document.getElementById('clientPhone').value.trim();
+  window.open(buildSmsLink(buildPropositionMessage(), phone), '_blank');
+  saveRecommendation(document.getElementById('saveStatus'), 'SMS ouvert. ');
+});
+
+// ---------- Relances (recommandations pas encore transformées en commande) ----------
+function buildSmsLink(text, phone){
+  const waNum = phoneToWaNumber(phone);
+  const numPart = waNum ? ('+' + waNum) : '';
+  const sep = isIOSDevice() ? '&body=' : '?body=';
+  return 'sms:' + numPart + sep + encodeURIComponent(text);
+}
+
+function fillRelanceTemplate(tpl, data){
+  return tpl
+    .replace(/\{prenom\}/g, data.prenom || '')
+    .replace(/\{parfum\}/g, data.parfum || 'ta recommandation');
+}
+
+function renderRelances(list){
+  const box = document.getElementById('relanceList');
+  const badge = document.getElementById('relanceCountBadge');
+  if(!list.length){
+    box.innerHTML = '<p class="hint">Aucune relance en attente 🎉</p>';
+    badge.style.display = 'none';
+    return;
+  }
+  badge.textContent = list.length + ' en attente';
+  badge.style.display = 'inline-block';
+  box.innerHTML = list.map((r,i) => `
+    <div class="order-line" style="align-items:flex-start;flex-wrap:wrap;" data-ridx="${i}">
+      <div class="name" style="flex:1 1 220px;">
+        ${r.client || '(sans prénom)'} <span class="badge">${r.date || ''}</span>
+        <div class="meta">
+          ${r.parfum ? ('Recherché : ' + r.parfum + ' — ') : ''}${r.nom1 ? ('proposé : ' + r.nom1 + (r.ref1 ? (' (' + r.ref1 + ')') : '')) : ''}
+        </div>
+        <div class="meta">${r.telephone ? ('📱 ' + r.telephone) : 'Pas de téléphone enregistré'}${r.email ? (' · ' + r.email) : ''}</div>
+      </div>
+      <div class="actions" style="margin-top:6px;">
+        <button type="button" class="secondary relanceWaBtn" data-ridx="${i}" style="padding:8px 12px;font-size:.8rem;" ${r.telephone ? '' : 'disabled'}>WhatsApp</button>
+        <button type="button" class="secondary relanceSmsBtn" data-ridx="${i}" style="padding:8px 12px;font-size:.8rem;" ${r.telephone ? '' : 'disabled'}>SMS</button>
+        <button type="button" class="secondary relanceDoneBtn" data-ridx="${i}" style="padding:8px 12px;font-size:.8rem;">✓ Relancé</button>
+      </div>
+    </div>
+  `).join('');
+
+  box.querySelectorAll('.relanceWaBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = list[btn.dataset.ridx];
+      const msg = fillRelanceTemplate(document.getElementById('relanceTemplate').value, {prenom:r.client, parfum:r.nom1 || r.parfum});
+      window.open(buildWaLink(msg, r.telephone), '_blank');
+    });
+  });
+  box.querySelectorAll('.relanceSmsBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = list[btn.dataset.ridx];
+      const msg = fillRelanceTemplate(document.getElementById('relanceTemplate').value, {prenom:r.client, parfum:r.nom1 || r.parfum});
+      window.open(buildSmsLink(msg, r.telephone), '_blank');
+    });
+  });
+  box.querySelectorAll('.relanceDoneBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = list[btn.dataset.ridx];
+      btn.disabled = true;
+      btn.textContent = '...';
+      fetch(WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({type:'maj_statut', rowIndex: r.rowIndex, statut:'Relancé'})
+      }).then(()=>{
+        const line = btn.closest('.order-line');
+        if(line) line.remove();
+      }).catch(()=>{
+        btn.disabled = false;
+        btn.textContent = '✓ Relancé';
+      });
+    });
+  });
+}
+
+function loadRelances(){
+  const box = document.getElementById('relanceList');
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    box.innerHTML = '<p class="hint">Configuration requise : colle l\'URL de ton Web App Apps Script (WEBAPP_URL).</p>';
+    return;
+  }
+  box.innerHTML = '<p class="hint">Chargement...</p>';
+  fetch(WEBAPP_URL + '?action=relances')
+    .then(r=>{
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data=>{
+      if(!data || !data.ok) throw new Error('réponse inattendue');
+      renderRelances(data.results || []);
+    })
+    .catch(err=>{
+      box.innerHTML = "<p class=\"hint\">Impossible de charger les relances pour l'instant — cette fonctionnalité nécessite que ton Apps Script ait bien été redéployé avec l'action \"relances\" (voir instructions fournies). Détail : " + err.message + "</p>";
+    });
+}
+
+document.getElementById('loadRelancesBtn').addEventListener('click', loadRelances);
+loadRelances();
+
+// ---------- Relances 2-2-2 (méthode Chogan, basée sur les commandes) ----------
+const STAGE_LABELS_222 = {
+  J2: 'J+2 · Remerciement',
+  S2: '+2 sem · Ressenti & parrainage',
+  M2: '+2 mois · Réachat'
+};
+const STAGE_TEMPLATE_IDS_222 = { J2: 'tpl222J2', S2: 'tpl222S2', M2: 'tpl222M2' };
+
+function fill222Template(tpl, data){
+  return tpl
+    .replace(/\{prenom\}/g, data.prenom || '')
+    .replace(/\{parfum\}/g, data.parfum || 'ta commande');
+}
+
+function render222(list){
+  const box = document.getElementById('relance222List');
+  const badge = document.getElementById('relance222CountBadge');
+  if(!list.length){
+    box.innerHTML = '<p class="hint">Aucune relance 2-2-2 due aujourd\'hui 🎉</p>';
+    badge.style.display = 'none';
+    return;
+  }
+  badge.textContent = list.length + ' à envoyer';
+  badge.style.display = 'inline-block';
+  box.innerHTML = list.map((r,i) => `
+    <div class="order-line" style="align-items:flex-start;flex-wrap:wrap;" data-r222idx="${i}">
+      <div class="name" style="flex:1 1 220px;">
+        ${r.client || '(sans prénom)'} <span class="badge">${STAGE_LABELS_222[r.stage] || r.stage}</span>
+        <div class="meta">${r.articles ? r.articles : ''}</div>
+        <div class="meta">Commande du ${r.dateCommande || ''} · échéance ${r.dateCible || ''}${r.receptionEstimee ? ' (réception estimée)' : ''}</div>
+        <div class="meta">${r.telephone ? ('📱 ' + r.telephone) : 'Pas de téléphone enregistré'}${r.email ? (' · ' + r.email) : ''}</div>
+      </div>
+      <div class="actions" style="margin-top:6px;">
+        <button type="button" class="secondary r222WaBtn" data-r222idx="${i}" style="padding:8px 12px;font-size:.8rem;" ${r.telephone ? '' : 'disabled'}>WhatsApp</button>
+        <button type="button" class="secondary r222SmsBtn" data-r222idx="${i}" style="padding:8px 12px;font-size:.8rem;" ${r.telephone ? '' : 'disabled'}>SMS</button>
+        <button type="button" class="secondary r222DoneBtn" data-r222idx="${i}" style="padding:8px 12px;font-size:.8rem;">✓ Envoyé</button>
+      </div>
+    </div>
+  `).join('');
+
+  function buildMsg(r){
+    const tplEl = document.getElementById(STAGE_TEMPLATE_IDS_222[r.stage]);
+    const tpl = tplEl ? tplEl.value : '';
+    return fill222Template(tpl, {prenom: r.client, parfum: (r.articles || '').split(' (')[0]});
+  }
+
+  box.querySelectorAll('.r222WaBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = list[btn.dataset.r222idx];
+      window.open(buildWaLink(buildMsg(r), r.telephone), '_blank');
+      markSent222(r, btn);
+    });
+  });
+  box.querySelectorAll('.r222SmsBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = list[btn.dataset.r222idx];
+      window.open(buildSmsLink(buildMsg(r), r.telephone), '_blank');
+      markSent222(r, btn);
+    });
+  });
+  box.querySelectorAll('.r222DoneBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = list[btn.dataset.r222idx];
+      markSent222(r, btn);
+    });
+  });
+}
+
+function markSent222(r, btn){
+  const line = btn.closest('.order-line');
+  if(line){
+    line.style.opacity = '.5';
+    line.querySelectorAll('button').forEach(b=> b.disabled = true);
+  }
+  fetch(WEBAPP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({type:'maj_relance_commande', rowIndex: r.rowIndex, stage: r.stage})
+  }).then(()=>{
+    if(line) line.remove();
+  }).catch(()=>{
+    if(line){
+      line.style.opacity = '1';
+      line.querySelectorAll('button').forEach(b=> b.disabled = false);
+    }
+  });
+}
+
+function loadRelances222(){
+  const box = document.getElementById('relance222List');
+  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
+    box.innerHTML = '<p class="hint">Configuration requise : colle l\'URL de ton Web App Apps Script (WEBAPP_URL).</p>';
+    return;
+  }
+  box.innerHTML = '<p class="hint">Chargement...</p>';
+  fetch(WEBAPP_URL + '?action=relances222')
+    .then(r=>{
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data=>{
+      if(!data || !data.ok) throw new Error('réponse inattendue');
+      render222(data.results || []);
+    })
+    .catch(err=>{
+      box.innerHTML = "<p class=\"hint\">Impossible de charger les relances 2-2-2 pour l'instant — cette fonctionnalité nécessite que ton Apps Script ait bien été redéployé avec l'action \"relances222\" (voir instructions fournies). Détail : " + err.message + "</p>";
+    });
+}
+
+document.getElementById('loadRelances222Btn').addEventListener('click', loadRelances222);
+loadRelances222();
+
+// ---------- Persistance locale des messages type (survit aux rechargements de page) ----------
+const TEMPLATE_IDS_TO_PERSIST = ['relanceTemplate', 'propositionTemplate', 'tpl222J2', 'tpl222S2', 'tpl222M2'];
+TEMPLATE_IDS_TO_PERSIST.forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  try{
+    const saved = localStorage.getItem('chogan_tpl_' + id);
+    if(saved) el.value = saved;
+  }catch(e){}
+  el.addEventListener('change', ()=>{
+    try{ localStorage.setItem('chogan_tpl_' + id, el.value); }catch(e){}
   });
 });
 </script>
