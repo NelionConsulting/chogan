@@ -1518,6 +1518,30 @@ function clientHistoryKey(c){
 return (c.telephone || '').trim() || (c.email || '').trim() || (c.client || '').trim() || '—';
 }
 
+const ORDER_STATUSES = ['En commande', 'Payée', 'Envoyée', 'Livrée'];
+const ORDER_STATUS_COLORS = { 'En commande': '#9c8b78', 'Payée': '#c3a26c', 'Envoyée': '#a97c5a', 'Livrée': '#1a7a3c' };
+
+function updateOrderStatus(rowIndex, statut, badgeEl){
+if(badgeEl){ badgeEl.textContent = '...'; badgeEl.style.display = 'inline'; }
+fetch(WEBAPP_URL, {
+method: 'POST',
+mode: 'no-cors',
+headers: {'Content-Type':'text/plain;charset=utf-8'},
+body: JSON.stringify({type:'maj_statut_commande', rowIndex: rowIndex, statut: statut})
+}).then(()=>{
+if(badgeEl){
+badgeEl.textContent = '✓ enregistré';
+setTimeout(()=>{ badgeEl.style.display = 'none'; }, 2000);
+}
+if(dashboardData){
+const order = dashboardData.commandes.find(c=> String(c.rowIndex) === String(rowIndex));
+if(order) order.statut = statut;
+}
+}).catch(()=>{
+if(badgeEl){ badgeEl.textContent = 'Erreur, réessaie'; badgeEl.style.color = '#a3272c'; }
+});
+}
+
 function renderClientHistory(){
 const box = document.getElementById('clientHistoryList');
 if(!box) return;
@@ -1570,11 +1594,26 @@ ${g.orders.map(o => `
 <div style="padding:8px 0;border-top:1px dashed var(--border);font-size:.85rem;">
 <div><strong>${formatHistoryDate(o.date)}</strong> — ${(parseFloat(o.total)||0).toFixed(2)}€ · ${o.reglement || ''}</div>
 <div class="meta" style="margin-top:2px;">${o.articles || ''}</div>
+<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+<select class="orderStatusSelect" data-rowindex="${o.rowIndex || ''}" style="width:auto;padding:5px 8px;font-size:.78rem;border-color:${ORDER_STATUS_COLORS[o.statut] || 'var(--border)'};color:${ORDER_STATUS_COLORS[o.statut] || 'var(--ink)'};font-weight:600;">
+${ORDER_STATUSES.map(s=>`<option value="${s}" ${(o.statut||'En commande')===s?'selected':''}>${s}</option>`).join('')}
+</select>
+<span class="orderStatusSaved hint" style="display:none;margin-top:0;"></span>
+</div>
 </div>
 `).join('')}
 </div>
 </div>
 `).join('');
+
+box.querySelectorAll('.orderStatusSelect').forEach(sel=>{
+sel.addEventListener('change', ()=>{
+sel.style.borderColor = ORDER_STATUS_COLORS[sel.value] || 'var(--border)';
+sel.style.color = ORDER_STATUS_COLORS[sel.value] || 'var(--ink)';
+const badge = sel.nextElementSibling;
+updateOrderStatus(sel.dataset.rowindex, sel.value, badge);
+});
+});
 }
 
 document.getElementById('clientHistorySearch').addEventListener('input', renderClientHistory);
