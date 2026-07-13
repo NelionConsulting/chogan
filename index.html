@@ -183,11 +183,6 @@ Envoyer par SMS
 <label for="clientEmail">Email du client (optionnel)</label>
 <input type="email" id="clientEmail" placeholder="Ex : camille@exemple.fr">
 
-<div class="actions" style="margin-top:8px;">
-<button type="button" class="secondary" id="lookupClientBtn">🔍 Retrouver l'historique de ce client</button>
-</div>
-<div id="lookupResults" class="hint" style="margin-top:4px;"></div>
-
 <label>Comment chercher ?</label>
 <div class="genre-row" id="modeRow">
 <button type="button" data-mode="perfume" class="active">Je connais son parfum</button>
@@ -340,6 +335,22 @@ Envoyer par SMS
 </div>
 <div id="orderSaveStatus"></div>
 <div id="orderSummaryBox"></div>
+</div>
+
+<div class="card" id="clientHistoryCard">
+<h2>🗂️ Historique clients</h2>
+<div class="hint" style="margin-top:-6px;margin-bottom:10px;">Toutes les commandes de tes clients (date, panier, montant), calculées en direct depuis ton Google Sheet.</div>
+
+<label for="lookupPhoneQuick">Recherche rapide par téléphone (interroge directement le Sheet)</label>
+<input type="text" id="lookupPhoneQuick" placeholder="Ex : 06 12 34 56 78" inputmode="tel">
+<div class="actions" style="margin-top:8px;">
+<button type="button" class="secondary" id="lookupClientBtn">🔍 Retrouver l'historique de ce numéro</button>
+</div>
+<div id="lookupResults" class="hint" style="margin-top:4px;"></div>
+
+<label for="clientHistorySearch" style="margin-top:16px;">Ou parcourir tout l'historique</label>
+<input type="text" id="clientHistorySearch" placeholder="Filtrer par nom ou téléphone..." autocomplete="off">
+<div id="clientHistoryList" style="margin-top:12px;"></div>
 </div>
 
 <div class="card">
@@ -567,7 +578,7 @@ notesModeBlock.style.display = 'none';
 
 // ---------- Historique client (nécessite un endpoint doGet côté Apps Script — voir instructions séparées) ----------
 document.getElementById('lookupClientBtn').addEventListener('click', ()=>{
-const phone = document.getElementById('clientPhone').value.trim();
+const phone = document.getElementById('lookupPhoneQuick').value.trim();
 const box = document.getElementById('lookupResults');
 if(!phone){
 box.textContent = "Renseigne d'abord un numéro de téléphone ci-dessus pour rechercher l'historique.";
@@ -1492,7 +1503,75 @@ recommandationsCount: recosAvecId.length || recommandationsPeriode.length,
 commandesCount: nbCommandes,
 relances: {j2sent, j2pending, s2sent, s2pending, m2sent, m2pending}
 });
+
+renderClientHistory();
 }
+
+// ---------- Historique clients (vue d'ensemble, à partir des commandes déjà chargées) ----------
+function clientHistoryKey(c){
+return (c.telephone || '').trim() || (c.email || '').trim() || (c.client || '').trim() || '—';
+}
+
+function renderClientHistory(){
+const box = document.getElementById('clientHistoryList');
+if(!box) return;
+if(!dashboardData || !dashboardData.commandes || !dashboardData.commandes.length){
+box.innerHTML = '<p class="hint">Aucune commande enregistrée pour le moment.</p>';
+return;
+}
+
+const search = normalize(document.getElementById('clientHistorySearch').value);
+
+// Regroupe les commandes par client (téléphone en priorité, sinon email, sinon nom)
+const groups = {};
+dashboardData.commandes.forEach(c=>{
+const key = clientHistoryKey(c);
+if(!groups[key]) groups[key] = { client: c.client || '(sans nom)', telephone: c.telephone || '', email: c.email || '', orders: [] };
+groups[key].orders.push(c);
+if(c.client && !groups[key].client) groups[key].client = c.client;
+if(c.telephone && !groups[key].telephone) groups[key].telephone = c.telephone;
+if(c.email && !groups[key].email) groups[key].email = c.email;
+});
+
+let clientList = Object.values(groups).map(g=>{
+g.orders.sort((a,b)=> new Date(b.date) - new Date(a.date));
+g.total = g.orders.reduce((s,o)=> s + (parseFloat(o.total) || 0), 0);
+g.lastDate = g.orders[0] ? g.orders[0].date : '';
+return g;
+});
+
+if(search){
+clientList = clientList.filter(g=>
+normalize(g.client).includes(search) || normalize(g.telephone).includes(search) || normalize(g.email).includes(search)
+);
+}
+
+clientList.sort((a,b)=> new Date(b.lastDate) - new Date(a.lastDate));
+
+if(!clientList.length){
+box.innerHTML = '<p class="hint">Aucun client ne correspond à cette recherche.</p>';
+return;
+}
+
+box.innerHTML = clientList.map(g => `
+<div class="order-line" style="align-items:flex-start;flex-wrap:wrap;flex-direction:column;">
+<div class="name" style="width:100%;">
+${g.client} <span class="badge">${g.orders.length} commande${g.orders.length>1?'s':''}</span> <span class="badge">${formatEuros(g.total)}</span>
+<div class="meta">${g.telephone ? ('📱 ' + g.telephone) : ''}${g.email ? (' · ' + g.email) : ''}</div>
+</div>
+<div style="width:100%;margin-top:8px;">
+${g.orders.map(o => `
+<div style="padding:8px 0;border-top:1px dashed var(--border);font-size:.85rem;">
+<div><strong>${o.date || ''}</strong> — ${(parseFloat(o.total)||0).toFixed(2)}€ · ${o.reglement || ''}</div>
+<div class="meta" style="margin-top:2px;">${o.articles || ''}</div>
+</div>
+`).join('')}
+</div>
+</div>
+`).join('');
+}
+
+document.getElementById('clientHistorySearch').addEventListener('input', renderClientHistory);
 
 function renderDashCharts(d){
 if(document.getElementById('dashboardScreen').style.display === 'none') return;
