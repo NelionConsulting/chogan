@@ -1508,6 +1508,12 @@ renderClientHistory();
 }
 
 // ---------- Historique clients (vue d'ensemble, à partir des commandes déjà chargées) ----------
+function formatHistoryDate(dateStr){
+const d = new Date(dateStr);
+if(isNaN(d)) return dateStr || '';
+return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+
 function clientHistoryKey(c){
 return (c.telephone || '').trim() || (c.email || '').trim() || (c.client || '').trim() || '—';
 }
@@ -1562,7 +1568,7 @@ ${g.client} <span class="badge">${g.orders.length} commande${g.orders.length>1?'
 <div style="width:100%;margin-top:8px;">
 ${g.orders.map(o => `
 <div style="padding:8px 0;border-top:1px dashed var(--border);font-size:.85rem;">
-<div><strong>${o.date || ''}</strong> — ${(parseFloat(o.total)||0).toFixed(2)}€ · ${o.reglement || ''}</div>
+<div><strong>${formatHistoryDate(o.date)}</strong> — ${(parseFloat(o.total)||0).toFixed(2)}€ · ${o.reglement || ''}</div>
 <div class="meta" style="margin-top:2px;">${o.articles || ''}</div>
 </div>
 `).join('')}
