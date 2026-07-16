@@ -76,6 +76,11 @@ display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weig
 display:inline-block;background:var(--pink);color:var(--purple-dark);font-size:.72rem;
 padding:2px 8px;border-radius:20px;margin-right:6px;font-weight:600;
 }
+.insp-badge{
+display:inline-block;background:var(--gold);color:#fff;font-size:.72rem;
+padding:2px 9px;border-radius:20px;margin-left:6px;font-weight:700;
+white-space:nowrap;
+}
 .price{font-weight:700;color:var(--purple-dark);font-size:1.05rem;white-space:nowrap;}
 #detectedFamily{
 margin-top:10px;font-size:.88rem;background:var(--pink);color:var(--purple-dark);
@@ -508,6 +513,25 @@ function familyTokens(fam){
 return normalize(fam).split(" ").filter(Boolean);
 }
 
+// ---------- Typologie générale (les 7 grandes familles officielles) ----------
+// Sert de critère dominant de correspondance, en plus des tokens de famille détaillée.
+const CANONICAL_TYPOLOGIES = ["oriental","floral","boise","chypre","hesperide","fougere","aromatique"];
+const TYPOLOGY_LABELS = {oriental:"Orientale", floral:"Florale", boise:"Boisée", chypre:"Chyprée", hesperide:"Hespéridée", fougere:"Fougère", aromatique:"Aromatique"};
+// Repli pour les tokens "facette" qui n'appartiennent pas en tant que tels aux 7 familles officielles
+// mais qui, en parfumerie, se rattachent classiquement à l'une d'elles.
+const TYPOLOGY_FALLBACK = {
+ambre:"oriental", vanille:"oriental", epice:"oriental", gourmand:"oriental",
+musque:"floral", fruite:"floral", solaire:"floral", poudre:"floral",
+aquatique:"hesperide", cuir:"boise", frais:"hesperide"
+};
+function generalTypology(fam){
+if(!fam || fam === 'Enfant') return null;
+const tokens = familyTokens(fam);
+for(const tok of tokens){ if(CANONICAL_TYPOLOGIES.includes(tok)) return tok; }
+for(const tok of tokens){ if(TYPOLOGY_FALLBACK[tok]) return TYPOLOGY_FALLBACK[tok]; }
+return null;
+}
+
 // Build search index: chogan catalog (by inspiration + brand + own name + ref) + supplementary list
 const searchIndex = [];
 DATA.catalog.forEach(p=>{
@@ -732,6 +756,13 @@ const tFam = normalize(targetFamily);
 const pFam = normalize(p.famille);
 let score = 0;
 if(matchedRef && p.ref === matchedRef) score += 10;
+// Critère dominant : la typologie générale (l'une des 7 grandes familles olfactives)
+const tTypo = generalTypology(targetFamily);
+const pTypo = generalTypology(p.famille);
+if(tTypo && pTypo){
+if(tTypo === pTypo) score += 9;
+else score -= 3; // typologie générale différente : on désavantage nettement sans exclure
+}
 if(pFam === tFam) score += 6;
 const tTokens = familyTokens(targetFamily);
 const pTokens = familyTokens(p.famille);
@@ -753,6 +784,11 @@ noteTokens.forEach(t=>{ if(pTokens.includes(t)) matchCount++; });
 if(matchCount === 0) return -999;
 let score = matchCount * 4;
 if(matchCount === noteTokens.length && noteTokens.length > 1) score += 5; // bonus: matches every note requested
+// Si une des notes cochées est elle-même une des 7 typologies générales, on
+// avantage les références dont la typologie générale correspond réellement.
+const pTypo = generalTypology(p.famille);
+const targetTypo = CANONICAL_TYPOLOGIES.find(c => noteTokens.includes(c));
+if(targetTypo && pTypo === targetTypo) score += 5;
 if(genre !== 'ALL' && p.genre === genre) score += 2;
 return score;
 }
@@ -825,7 +861,7 @@ list.innerHTML = top.map((p,i)=>`
 <div class="result-card">
 <div class="result-rank">${i+1}</div>
 <div class="result-main">
-<div class="name">${p.nom || p.ref} <span class="badge">${p.ref}</span></div>
+<div class="name">${p.nom || p.ref} <span class="badge">${p.ref}</span>${p.inspiration ? ('<span class="insp-badge" title="Inspiré de ce parfum célèbre">✦ '+p.inspiration+(p.marque? " ("+p.marque+")":"")+'</span>') : ""}</div>
 <div class="meta">
 ${p.inspiration ? ("Dans l'esprit de <strong>"+p.inspiration+(p.marque? " ("+p.marque+")":"")+"</strong> — ") : ""}
 ${p.famille} · Gamme ${p.gamme} · ${p.genre==='F'?'Femme':p.genre==='H'?'Homme':'Mixte'}
